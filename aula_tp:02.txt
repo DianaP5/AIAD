@@ -1,6 +1,6 @@
 
 *******************************
-**      EXEMPLO DA AULAA     **
+**      EXEMPLO DA AULA      **
 *******************************
 
 public class MyAgent extends jade.core.Agent {
