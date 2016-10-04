@@ -48,7 +48,7 @@ jade.domain
 	- DFService -> Utilizada para registar agentes no seviço das páginas amarelas.
 
 *********************
-**    EXAMPLES     **
+**    EXAEMPOS     **
 *********************
 - HelloWorld
 - Behaviour
