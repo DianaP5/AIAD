@@ -5,7 +5,7 @@
 
 public class MyAgent extends jade.core.Agent {
 
-	// utilizados para criar tarefas e register agente no serviço de páginas amarelas 
+	// utilizado para criar tarefas e register agente no serviço de páginas amarelas 
 	// invocado durante a inicialização do agente
 	public void setup(){
 		System.out.println("Hi!");
