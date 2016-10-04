@@ -1,0 +1,64 @@
+
+*******************************
+**      EXEMPLO DA AULAA     **
+*******************************
+
+public class MyAgent extends jade.core.Agent {
+
+	// utilizados para criar tarefas e register agente no serviço de páginas amarelas 
+	// invocado durante a inicialização do agente
+	public void setup(){
+		System.out.println("Hi!");
+	}
+
+	// invocado quando o agente é morto
+	public void takeDown(){
+		System.out.println("Goodbye!");		
+	}
+}
+
+*******************************
+**     MÉTODOS ADICIONAIS    **
+*******************************
+
+addBehaviour()  -> permite acrescentar tarefas ao agente a partir de setup()
+send()		-> enviar mensagens	( utilizado dentro das tarefas)
+receiver()	-> ler mensagens da mailbox do agente	( utilizado dentro das tarefas)
+getArguments()	-> configurar os agentes com argumentos da linha de comandos. 
+	           ( utilizados em setup() )
+
+*********************
+**    JADE API     **
+*********************
+jade.core
+	- Agent -> utilizada para criar agentes
+	- AID -> utilizada para identificar agentes (ID deles)
+	...
+
+jade.core.behaviours
+	- Behaviour	-> permite criat uma nova tarefa 
+	...
+
+jade.lang.acl -> para comunicação entre agentes
+	- ACLMessage	 ->utilizada para enviar mensagens
+	- MessageTemplate  -> utilizada para filtrar mensagens de diferentes tipos
+
+jade.domain
+	- AMSService ( não utilizada )
+	- DFService -> Utilizada para registar agentes no seviço das páginas amarelas.
+
+*********************
+**    EXAMPLES     **
+*********************
+- HelloWorld
+- Behaviour
+	- SimpleAgent
+	- TimeAgent
+- Messaging
+	- PingAgent
+	- BlockingReceiveAgent
+	- CustomTemplateAgent
+- Yellow Pages
+	- DFRegisterAgent
+	- DFSearchAgent
+BookTrading
