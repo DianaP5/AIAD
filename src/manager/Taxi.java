@@ -8,10 +8,13 @@ public class Taxi extends Agent
 {
 	private final int capacity = 4;
 	private int passengers = 0;
+	public static int ID = 0;
 	
 	protected void setup()
 	{
-		System.out.println("Created taxi");
+		//enviar mensagem à central que é novo na companhia
+		System.out.println("Created taxi with ID " + ID);
+		ID++;
 		addBehaviour(new CyclicBehaviour(this) 
 		{
 
