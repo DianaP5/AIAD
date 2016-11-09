@@ -2,44 +2,45 @@ package manager;
 
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
 
 public class Passenger extends Agent
 {
-	private int weigth;
-	private int cost = 0;
+	private int weigth;			// how much 'capacity' does the passenger need
+	private String srcPoint;	// where the passenger initially is
+	private String dstPoint;	// where the passenger wants to go
+	private int cost = 0;		// how much will the passenger pay
 	
+	// initialize passenger
 	protected void setup()
 	{
-		System.out.println("Created Passenger");
+		// parse passenger arguments
+		try {
+			Object[] args = getArguments();
+			this.srcPoint = args[0].toString(); // obtain initial position
+			this.dstPoint = args[1].toString(); // obtain destiny position
+			this.weigth = Integer.parseInt(args[2].toString());	// obtain needed 'capacity'
+			
+			System.out.println("[PASSENGER] : CREATED " + weigth + " AND WAITING ON " + srcPoint + " TO GO TO " + dstPoint);
+			
+			// ask central for taxi
+			addBehaviour(new OneShotBehaviour(){
+				public void action() {
+					
+					// send a request message to the central
+					ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
+					request.setContent( "ask_taxi;" +  srcPoint + ";" + dstPoint + ";" + weigth);
+					request.addReceiver(getAID("Central"));
+					send(request);
+					
+					// TODO: block until message from central is not received
+				}		
+			});
+			
+		} catch(ArrayIndexOutOfBoundsException e) { System.out.println("[ERROR] : INVALID NUMBER OF ARGUMENTS WHILE CREATING 'PASSENGER'");  System.exit(1); }
 	}
 	
-	protected void takeDown()
-	{
-		System.out.println("Removed Passenger");
-	}
-	
-	private class CallTaxi extends Behaviour
-	{
-
-		@Override
-		public void action()
-		{
-			ACLMessage msg = myAgent.receive();
-			if(msg != null)
-			{
-				ACLMessage reply = msg.createReply();
-				reply.setPerformative(ACLMessage.INFORM);
-				reply.setContent("take");
-				send(reply);
-			}
-		}
-
-		@Override
-		public boolean done() 
-		{
-			return false;
-		}
-		
-	}
+	// take down passenger
+	protected void takeDown() { System.out.println("[PASSENGER] : DESTINY LOCATION REACHED"); }
 }

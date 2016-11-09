@@ -2,46 +2,46 @@ package manager;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 public class Taxi extends Agent
 {
-	private final int capacity = 4;
-	private int passengers = 0;
-	public static int ID = 0;
+	private final int CAPACITY = 4; // fixed maximum capacity
+	private int passengers = 0;	// actual number of passenger inside the taxi
+	public static int id = 0;	// the taxi ID
 	
+	// join the company reply template
+	private MessageTemplate join = MessageTemplate.and(
+			MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL),
+			MessageTemplate.MatchContent("welcome")
+	);
+	
+	// initialize taxi
 	protected void setup()
 	{
-		//enviar mensagem à central que é novo na companhia
-		System.out.println("Created taxi with ID " + ID);
-		ID++;
-		addBehaviour(new CyclicBehaviour(this) 
-		{
+		
+		System.out.println("[TAXI_" + ++id + "] : CREATED");
 
-			@Override
+		// join the company
+		addBehaviour(new OneShotBehaviour(this){
 			public void action() {
-				ACLMessage msg = myAgent.receive();
-				if(msg != null)
-				{
-					System.out.println("Recebi");
-					if(msg.getContent().contains("take"))
-					{
-						if(passengers < capacity)
-						{
-							passengers++;
-							System.out.println("Adicionou passageiro");
-						}
-						else
-						{
-							System.out.println("Taxi Cheio");
-						}
-					}
-					
-				}
 				
+				// send a request message to the central
+				ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+				message.setContent("new_taxi");
+				message.addReceiver(getAID("Central"));
+				send(message);
+				
+				System.out.println("[TAXI_" + id + "] : SENT 'JOINING MESSAGE' TO CENTRAL");
+				
+				// block until confirmation from central is not received
+				ACLMessage reply = blockingReceive(join);
+				System.out.println("[TAXI_" + id + "] : JOINED THE COMPANY");
 			}
-			
 		});
+
 	}
 	
 	protected void takeDown()
@@ -49,32 +49,4 @@ public class Taxi extends Agent
 		System.out.println("Removed taxi");
 	}
 	
-	private class TakePassenger extends Behaviour
-	{
-		@Override
-		public void action() 
-		{
-			ACLMessage msg = myAgent.receive();
-			if(msg != null)
-			{
-				System.out.println("Recebi");
-				if(msg.getContent().contains("take"))
-				{
-					if(passengers < capacity)
-					{
-						passengers++;
-						System.out.println("Adicionou passageiro");
-					}
-				}
-				
-			}
-			
-		}
-
-		@Override
-		public boolean done() 
-		{
-			return true;
-		}
-	}
 }
