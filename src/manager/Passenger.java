@@ -4,6 +4,7 @@ import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 public class Passenger extends Agent
 {
@@ -11,6 +12,16 @@ public class Passenger extends Agent
 	private String srcPoint;	// where the passenger initially is
 	private String dstPoint;	// where the passenger wants to go
 	private int cost = 0;		// how much will the passenger pay
+	private int taxiID;			// the taxi that the passenger must take
+	
+	// message template for central replies
+	private MessageTemplate centralReply = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+	
+	// sets the taxi ID
+	public void setTaxiID(int taxiID){ this.taxiID = taxiID; }
+	
+	// increments the cost by a given amount
+	public void increaseCost(int cost){ this.cost += cost; }
 	
 	// initialize passenger
 	protected void setup()
@@ -34,11 +45,17 @@ public class Passenger extends Agent
 					request.addReceiver(getAID("Central"));
 					send(request);
 					
-					// TODO: block until message from central is not received
+					// block until message from central is not received
+					ACLMessage reply = blockingReceive(centralReply);
+					
+					// process reply content
+					String content = reply.getContent();
+					setTaxiID(Integer.parseInt(content.substring(content.indexOf(';') + 1)));
+					System.out.println("[PASSENGER] : WAITING FOR TAXI Nr " + taxiID);
 				}		
 			});
 		} 
-		catch (ArrayIndexOutOfBoundsException e) { System.out.println("[ERROR] : INVALID NUMBER OF ARGUMENTS WHILE CREATING 'PASSENGER'");  System.exit(1); }
+		catch(ArrayIndexOutOfBoundsException e) { System.out.println("[ERROR] : INVALID NUMBER OF ARGUMENTS WHILE CREATING 'PASSENGER'");  System.exit(1); }
 		catch (NumberFormatException e) { System.out.println("[ERROR] : INVALID CAPACITY WHILE CREATING PASSENGER");  System.exit(1); }
 		
 	}

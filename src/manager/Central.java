@@ -26,6 +26,7 @@ public class Central extends Agent {
 				
 				// receive message from agent
 				ACLMessage message = myAgent.receive(request);
+				
 				if(message != null) {
 					
 					String content = message.getContent(); // get request content
@@ -34,7 +35,9 @@ public class Central extends Agent {
 						
 						System.out.println("[CENTRAL] : RECEIVED 'NEW TAXI MSG' ->" + " THERE ARE NOW " + ++taxis + " TAXIS");
 			
-						// answer taxi with message
+						// TODO: process taxi id and assign it to data structure
+						
+						// confirm joining with taxi
 						ACLMessage reply = message.createReply();
 						reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 						reply.setContent("welcome");
@@ -51,13 +54,19 @@ public class Central extends Agent {
 						dstPoint = dstPoint.substring(0, dstPoint.indexOf(';')); // System.out.println(dstPoint);
 						srcPoint = srcPoint.substring(0, srcPoint.indexOf(';')); // System.out.println(srcPoint);
 						
-						
 						// TODO: send message to every taxi 
 						
-						// TODO: process requests
+						// TODO: process taxi responses and choose taxi
+												
+						// acknowledge passenger with id of chosen taxi
+						int taxiId = 1; // sample id while data structures and selecting algorithm are not implemented
 						
-						// TODO: acknowledge passenger
+						ACLMessage reply = message.createReply();
+						reply.setPerformative(ACLMessage.INFORM);
+						reply.setContent("your_taxi;" + Integer.toString(taxiId));
+						myAgent.send(reply);
 						
+						System.out.println("[CENTRAL] : SENT 'TAXI CONFIRMATION MSG' TO PASSENGER " + message.getSender().getLocalName());
 					} 
 				}
 			}
