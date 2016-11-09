@@ -7,7 +7,7 @@ import jade.lang.acl.ACLMessage;
 
 public class Passenger extends Agent
 {
-	private int weight;			// how much 'capacity' does the passenger need
+	private int weight;		// how much 'capacity' does the passenger need
 	private String srcPoint;	// where the passenger initially is
 	private String dstPoint;	// where the passenger wants to go
 	private int cost = 0;		// how much will the passenger pay
@@ -38,7 +38,7 @@ public class Passenger extends Agent
 				}		
 			});
 		} 
-		catch(ArrayIndexOutOfBoundsException e) { System.out.println("[ERROR] : INVALID NUMBER OF ARGUMENTS WHILE CREATING 'PASSENGER'");  System.exit(1); }
+		catch (ArrayIndexOutOfBoundsException e) { System.out.println("[ERROR] : INVALID NUMBER OF ARGUMENTS WHILE CREATING 'PASSENGER'");  System.exit(1); }
 		catch (NumberFormatException e) { System.out.println("[ERROR] : INVALID CAPACITY WHILE CREATING PASSENGER");  System.exit(1); }
 		
 	}
