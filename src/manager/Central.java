@@ -44,10 +44,13 @@ public class Central extends Agent {
 						
 						System.out.println("[CENTRAL] : RECEIVED 'ASK TAXI MSG'");
 						
-						// TODO process request content
-						//String srcPoint;
-						//String dstPoint;
-						//int weigth;
+						// process request content
+						String srcPoint = content.substring(content.indexOf(';') + 1, content.length());
+						String dstPoint = srcPoint.substring(srcPoint.indexOf(';') + 1, srcPoint.length());
+						int weight = Integer.parseInt(dstPoint.substring(dstPoint.indexOf(';') + 1)); // System.out.println(weight);
+						dstPoint = dstPoint.substring(0, dstPoint.indexOf(';')); // System.out.println(dstPoint);
+						srcPoint = srcPoint.substring(0, srcPoint.indexOf(';')); // System.out.println(srcPoint);
+						
 						
 						// TODO: send message to every taxi 
 						
