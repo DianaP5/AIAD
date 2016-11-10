@@ -18,6 +18,9 @@ public class Taxi extends Agent
 			MessageTemplate.MatchContent("welcome")
 	);
 	
+	// template for job proposal
+	private MessageTemplate proposal = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+	
 	// initialize taxi
 	protected void setup()
 	{
@@ -30,7 +33,7 @@ public class Taxi extends Agent
 				
 				// send a request message to the central
 				ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-				message.setContent("new_taxi");
+				message.setContent("new_taxi;" + id);
 				message.addReceiver(getAID("Central"));
 				send(message);
 				
@@ -42,6 +45,21 @@ public class Taxi extends Agent
 			}
 		});
 
+		// process job proposals
+		addBehaviour(new CyclicBehaviour(this){
+			public void action() {
+				// receive message from agent
+				ACLMessage message = myAgent.receive(proposal);
+				if(message != null) {
+					System.out.println("[TAXI_" + id + "] : RECEIVED JOB PROPOSAL FROM CENTRAL WITH CONTENT " + message.getContent());
+					
+					// TODO: get message arguments 
+					// TODO: process proposal
+					// TODO: give an answer
+					
+				}
+			}
+		});
 	}
 	
 	protected void takeDown()
