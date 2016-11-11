@@ -64,7 +64,7 @@ public class Central extends Agent {
 						
 						for (int i = 0; i < companyTaxis.size(); i++){
 							ACLMessage taxi_proposal= new ACLMessage(ACLMessage.PROPOSE);
-							taxi_proposal.setContent("taxi_proposal");
+							taxi_proposal.setContent("taxi_proposal;" + srcPoint + ";" + dstPoint + ";" + weight);
 							taxi_proposal.addReceiver(getAID(companyTaxis.get(i)));
 							send(taxi_proposal);
 							System.out.println("[CENTRAL] : SENT MESSAGE TO " + companyTaxis.get(i));

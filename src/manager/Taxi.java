@@ -53,9 +53,19 @@ public class Taxi extends Agent
 				if(message != null) {
 					System.out.println("[TAXI_" + id + "] : RECEIVED JOB PROPOSAL FROM CENTRAL WITH CONTENT " + message.getContent());
 					
-					// TODO: get message arguments 
-					// TODO: process proposal
-					// TODO: give an answer
+					// process request content
+					String content = message.getContent();
+					String srcPoint = content.substring(content.indexOf(';') + 1, content.length());
+					String dstPoint = srcPoint.substring(srcPoint.indexOf(';') + 1, srcPoint.length());
+					int weight = Integer.parseInt(dstPoint.substring(dstPoint.indexOf(';') + 1)); // System.out.println(weight);
+					dstPoint = dstPoint.substring(0, dstPoint.indexOf(';')); // System.out.println(dstPoint);
+					srcPoint = srcPoint.substring(0, srcPoint.indexOf(';')); // System.out.println(srcPoint);
+					
+					if (passengers + weight <= CAPACITY) { // if taxi has enough capacity to transport the passengers
+						// TODO: answer central with yes
+					} else {
+						// TODO: answer central with no
+					}
 					
 				}
 			}
