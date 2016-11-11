@@ -11,6 +11,7 @@ public class Taxi extends Agent
 	private final int CAPACITY = 4; // fixed maximum capacity
 	private int passengers = 0;	// actual number of passenger inside the taxi
 	public static int id = 0;	// the taxi ID
+	private String location = "Penafiel";
 	
 	// join the company reply template
 	private MessageTemplate join = MessageTemplate.and(
@@ -62,11 +63,18 @@ public class Taxi extends Agent
 					srcPoint = srcPoint.substring(0, srcPoint.indexOf(';')); // System.out.println(srcPoint);
 					
 					if (passengers + weight <= CAPACITY) { // if taxi has enough capacity to transport the passengers
-						// TODO: answer central with yes
+						ACLMessage taxi_proposal= new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
+						taxi_proposal.setContent("taxi_response;" + location);
+						taxi_proposal.addReceiver(getAID("Central"));
+						send(taxi_proposal);
+						System.out.println("[TAXI_" + id + "] : ACCEPT PROPOSAL FROM CENTRAL");
 					} else {
-						// TODO: answer central with no
+						ACLMessage taxi_proposal= new ACLMessage(ACLMessage.REJECT_PROPOSAL);
+						taxi_proposal.setContent("taxi_response_no");
+						taxi_proposal.addReceiver(getAID("Central"));
+						send(taxi_proposal);
+						System.out.println("[TAXI_" + id + "] : REJECTED PROPOSAL FROM CENTRAL");
 					}
-					
 				}
 			}
 		});
