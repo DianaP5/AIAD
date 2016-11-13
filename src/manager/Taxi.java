@@ -19,13 +19,17 @@ public class Taxi extends Agent
 			MessageTemplate.MatchContent("welcome")
 	);
 	
-	// template for job proposal
-	private MessageTemplate proposal = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+	// sends a message to an agent
+	private void sendMessage(int performative, String receiver, String content){
+		ACLMessage message = new ACLMessage(performative);
+		message.setContent(content);
+		message.addReceiver(getAID(receiver));
+		send(message);
+	}
 	
 	// initialize taxi
 	protected void setup()
 	{
-		
 		System.out.println("[TAXI_" + ++id + "] : CREATED");
 
 		// join the company
@@ -33,11 +37,7 @@ public class Taxi extends Agent
 			public void action() {
 				
 				// send a request message to the central
-				ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-				message.setContent("new_taxi;" + id);
-				message.addReceiver(getAID("Central"));
-				send(message);
-				
+				sendMessage(ACLMessage.REQUEST, "Central", "new_taxi;" + id);
 				System.out.println("[TAXI_" + id + "] : SENT 'JOINING MESSAGE' TO CENTRAL");
 				
 				// block until confirmation from central is not received
@@ -50,32 +50,43 @@ public class Taxi extends Agent
 		addBehaviour(new CyclicBehaviour(this){
 			public void action() {
 				// receive message from agent
-				ACLMessage message = myAgent.receive(proposal);
+				ACLMessage message = myAgent.receive();
 				if(message != null) {
-					System.out.println("[TAXI_" + id + "] : RECEIVED JOB PROPOSAL FROM CENTRAL WITH CONTENT " + message.getContent());
 					
-					// process request content
-					String content = message.getContent();
-					String srcPoint = content.substring(content.indexOf(';') + 1, content.length());
-					String dstPoint = srcPoint.substring(srcPoint.indexOf(';') + 1, srcPoint.length());
-					int weight = Integer.parseInt(dstPoint.substring(dstPoint.indexOf(';') + 1)); // System.out.println(weight);
-					dstPoint = dstPoint.substring(0, dstPoint.indexOf(';')); // System.out.println(dstPoint);
-					srcPoint = srcPoint.substring(0, srcPoint.indexOf(';')); // System.out.println(srcPoint);
+					 // process job proposals
+					if (message.getPerformative() == ACLMessage.PROPOSE) {
 					
-					if (passengers + weight <= CAPACITY) { // if taxi has enough capacity to transport the passengers
-						ACLMessage taxi_proposal= new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
-						taxi_proposal.setContent("taxi_response;" + location);
-						taxi_proposal.addReceiver(getAID("Central"));
-						send(taxi_proposal);
-						System.out.println("[TAXI_" + id + "] : ACCEPT PROPOSAL FROM CENTRAL");
-					} else {
-						ACLMessage taxi_proposal= new ACLMessage(ACLMessage.REJECT_PROPOSAL);
-						taxi_proposal.setContent("taxi_response_no");
-						taxi_proposal.addReceiver(getAID("Central"));
-						send(taxi_proposal);
-						System.out.println("[TAXI_" + id + "] : REJECTED PROPOSAL FROM CENTRAL");
+						System.out.println("[TAXI_" + id + "] : RECEIVED JOB PROPOSAL FROM CENTRAL WITH CONTENT " + message.getContent());
+						
+						// process request content
+						String content = message.getContent();
+						String srcPoint = content.substring(content.indexOf(';') + 1, content.length());
+						String dstPoint = srcPoint.substring(srcPoint.indexOf(';') + 1, srcPoint.length());
+						int weight = Integer.parseInt(dstPoint.substring(dstPoint.indexOf(';') + 1)); // System.out.println(weight);
+						dstPoint = dstPoint.substring(0, dstPoint.indexOf(';')); // System.out.println(dstPoint);
+						srcPoint = srcPoint.substring(0, srcPoint.indexOf(';')); // System.out.println(srcPoint);
+						
+						if (passengers + weight <= CAPACITY) { // if taxi has enough capacity to transport the passengers	
+							sendMessage(ACLMessage.ACCEPT_PROPOSAL, "Central", "taxi_response;" + location);
+							System.out.println("[TAXI_" + id + "] : ACCEPT PROPOSAL FROM CENTRAL");	
+						} else {	
+							sendMessage(ACLMessage.REJECT_PROPOSAL, "Central", "taxi_response_no");
+							System.out.println("[TAXI_" + id + "] : REJECTED PROPOSAL FROM CENTRAL");
+						}
+					} else if (message.getPerformative() == ACLMessage.INFORM){
+						
+						// process request content
+						String content = message.getContent();
+						String srcPoint = content.substring(content.indexOf(';') + 1, content.length());
+						String dstPoint = srcPoint.substring(srcPoint.indexOf(';') + 1, srcPoint.length());
+						int weight = Integer.parseInt(dstPoint.substring(dstPoint.indexOf(';') + 1)); // System.out.println(weight);
+						dstPoint = dstPoint.substring(0, dstPoint.indexOf(';')); // System.out.println(dstPoint);
+						srcPoint = srcPoint.substring(0, srcPoint.indexOf(';')); // System.out.println(srcPoint);
+					
+						System.out.println("[TAXI_" + id + "] : GOING ON MY WAY NOW " + message.getContent());
+						
 					}
-				}
+				} 
 			}
 		});
 	}

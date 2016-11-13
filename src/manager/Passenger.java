@@ -23,6 +23,14 @@ public class Passenger extends Agent
 	// increments the cost by a given amount
 	public void increaseCost(int cost){ this.cost += cost; }
 	
+	// sends a message to an agent
+	private void sendMessage(int performative, String receiver, String content){
+		ACLMessage message = new ACLMessage(performative);
+		message.setContent(content);
+		message.addReceiver(getAID(receiver));
+		send(message);
+	}
+	
 	// initialize passenger
 	protected void setup()
 	{
@@ -40,10 +48,7 @@ public class Passenger extends Agent
 				public void action() {
 					
 					// send a request message to the central
-					ACLMessage request = new ACLMessage(ACLMessage.REQUEST);
-					request.setContent( "ask_taxi;" +  srcPoint + ";" + dstPoint + ";" + weight);
-					request.addReceiver(getAID("Central"));
-					send(request);
+					sendMessage(ACLMessage.REQUEST, "Central", "ask_taxi;" +  srcPoint + ";" + dstPoint + ";" + weight);
 					
 					// block until message from central is not received
 					ACLMessage reply = blockingReceive(centralReply);

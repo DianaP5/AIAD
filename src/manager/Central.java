@@ -1,24 +1,36 @@
 package manager;
 
-import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import java.util.ArrayList;
 
-public class Central extends Agent {
+public class Central extends Agent
+{
 
 	private ArrayList<String> companyTaxis = new ArrayList<String>();
 	private int taxis = 0;
 
 	// message template for requests
 	private MessageTemplate request = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-
-	private MessageTemplate taxi_accept = MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL);
-
-	private MessageTemplate taxi_reject = MessageTemplate.MatchPerformative(ACLMessage.REJECT_PROPOSAL);
-
+	
+	// sends a message to an agent
+	private void sendMessage(int performative, String receiver, String content){
+		ACLMessage message = new ACLMessage(performative);
+		message.setContent(content);
+		message.addReceiver(getAID(receiver));
+		send(message);
+	}
+	
+	// reply to a received message
+	private void replyMessage(ACLMessage message, int performative, String content){
+		ACLMessage reply = message.createReply();
+		reply.setPerformative(performative);
+		reply.setContent(content);
+		send(reply);
+	}
+	
 	// initialize central
 	protected void setup() {
 
@@ -46,10 +58,8 @@ public class Central extends Agent {
 						companyTaxis.add(message.getSender().getLocalName());
 
 						// confirm joining with taxi
-						ACLMessage reply = message.createReply();
-						reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-						reply.setContent("welcome");
-						myAgent.send(reply);
+						replyMessage(message, ACLMessage.ACCEPT_PROPOSAL, "welcome");
+						
 
 					} else if (content.contains("ask_taxi")) { // PROCESS 'ASK
 																// TAXI' REQUEST
@@ -64,16 +74,12 @@ public class Central extends Agent {
 						srcPoint = srcPoint.substring(0, srcPoint.indexOf(';')); // System.out.println(srcPoint);
 
 						// block while the company has no taxis
-						while (companyTaxis.size() == 0) {
-						}
+						while (companyTaxis.size() == 0) {}
 
 						// send message to every taxi
 
 						for (int i = 0; i < companyTaxis.size(); i++) {
-							ACLMessage taxi_proposal = new ACLMessage(ACLMessage.PROPOSE);
-							taxi_proposal.setContent("taxi_proposal;" + srcPoint + ";" + dstPoint + ";" + weight);
-							taxi_proposal.addReceiver(getAID(companyTaxis.get(i)));
-							send(taxi_proposal);
+							sendMessage(ACLMessage.PROPOSE, companyTaxis.get(i), "taxi_proposal;" + srcPoint + ";" + dstPoint + ";" + weight);
 							System.out.println("[CENTRAL] : SENT MESSAGE TO " + companyTaxis.get(i));
 						}
 
@@ -97,15 +103,14 @@ public class Central extends Agent {
 						int taxiId = 1; // sample id while data structures and
 										// selecting algorithm are not
 										// implemented
+						
+						// inform passenger
+						replyMessage(message, ACLMessage.INFORM, "your_taxi;" + Integer.toString(taxiId));
+						System.out.println("[CENTRAL] : SENT 'TAXI CONFIRMATION MSG' TO PASSENGER " + message.getSender().getLocalName());
 
-						ACLMessage reply = message.createReply();
-						reply.setPerformative(ACLMessage.INFORM);
-						reply.setContent("your_taxi;" + Integer.toString(taxiId));
-						myAgent.send(reply);
-
-						System.out.println("[CENTRAL] : SENT 'TAXI CONFIRMATION MSG' TO PASSENGER "
-								+ message.getSender().getLocalName());
-
+						// inform taxi
+						sendMessage(ACLMessage.INFORM, "t1", "get_passenger;" + srcPoint + ";" + dstPoint + ";" + weight);
+						
 					} else {
 						System.out.println("[CENTRAL] : RECEIVED UNKNOWN MESSAGE TYPE");
 					}
