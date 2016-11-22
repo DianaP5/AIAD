@@ -2,6 +2,10 @@ package taxiManager;
 
 import java.util.ArrayList;
 
+import jade.core.AID;
+import jade.core.Profile;
+import jade.core.ProfileImpl;
+import jade.wrapper.StaleProxyException;
 import repast.simphony.context.Context;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactory;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactoryFinder;
@@ -15,6 +19,8 @@ import repast.simphony.space.continuous.NdPoint;
 import repast.simphony.space.continuous.RandomCartesianAdder;
 import repast.simphony.space.graph.Network;
 import repast.simphony.space.grid.WrapAroundBorders;
+import sajas.core.Runtime;
+
 import repast.simphony.space.grid.Grid;
 import repast.simphony.space.grid.GridBuilderParameters;
 import repast.simphony.space.grid.SimpleGridAdder;
@@ -22,69 +28,93 @@ import repast.simphony.space.grid.SimpleGridAdder;
 
 public class mapBuilder implements ContextBuilder<Object> {
 
-	private void connectPlaces(Network<Object> network, Location src, Location dst, double weight){
+	////////////////////////
+	//						
+	//	MEMBER VARIABLES  
+	//						
+	////////////////////////
+	private ArrayList<Location> locations = new ArrayList<Location>();	
+	private Context<Object> context;
+	private ContinuousSpace<Object> space;
+	private Network<Object> network;
+	
+	
+	////////////////////////
+	//						
+	//	MEMBER METHODS
+	//						
+	////////////////////////
+	
+	// adds a location to the map
+	
+	private void addLocation(String locationName){
+		addLocation(context, space, network, locationName);
+	}
+	
+	// creates a new location at a random place
+	private void addLocation(Context<Object> context,  ContinuousSpace<Object> space, Network<Object> network, String locationName){
+		Location location = new Location(locationName, space, network);
+		context.add(location);
+		locations.add(location);
+	}
+	// creates a new location at a specific place
+	private void addLocation(String locationName, double x, double y){
+		addLocation(context, space, network, locationName);
+		space.moveTo(getLocation(locationName), x, y);
+	}
+	
+	
+	// returns a location given its name
+	private Location getLocation(String locationName){
+		Location location = null;
+		for(int i = 0; i < locations.size(); i++) {
+			location = locations.get(i);
+			if(location.getLocationName() == locationName)
+				 break;
+		}
+		return location;
+	}
+	
+	// connects two locations
+	private void connectPlaces(String srcName, String dstName, double weight){
+		Location src = getLocation(srcName);
+		Location dst = getLocation(dstName);
 		network.addEdge(src, dst).setWeight(weight);
 		network.addEdge(dst, src).setWeight(weight);
 	}
-	
-	// TODO: reference a location by its NAME
-	private void addLocation(Context<Object> context, String locationName){}
 
 	@Override
 	public Context build(Context<Object> context) {
-		
-		context.setId("TaxiManager");
+		this.context = context;
+		this.context.setId("TaxiManager");
 		
 		// GENERATE SPACE
 		ContinuousSpaceFactory spaceFactory = ContinuousSpaceFactoryFinder.createContinuousSpaceFactory( null );
-		ContinuousSpace<Object> space = spaceFactory.createContinuousSpace ("space", context ,
+		space = spaceFactory.createContinuousSpace (
+				"space", 
+				this.context ,
 				new RandomCartesianAdder<Object>() ,
-				new repast.simphony.space.continuous.WrapAroundBorders(), 50, 50);
+				new repast.simphony.space.continuous.WrapAroundBorders(),
+				50, 50);
+		
 		
 		// GENERATE NETWORK
-		NetworkBuilder<Object> netBuilder = new NetworkBuilder<Object>("network", context, true);
+		NetworkBuilder<Object> netBuilder = new NetworkBuilder<Object>("network", this.context, true);
 		netBuilder.buildNetwork();
-		@SuppressWarnings("unchecked")
-		Network<Object> network = (Network<Object>) context.getProjection("network");
-		
-		
+		network = (Network<Object>) this.context.getProjection("network");
+				
 		// GENERATE LOCATIONS
-		Location penafiel = new Location("Penafiel", space, network);
-		Location paredes = new Location("Paredes", space, network);
-		Location marco = new Location("Marco", space, network);
-		context.add(penafiel);
-		context.add(paredes);
-		context.add(marco);
-		
+		addLocation("Penafiel", 20.0, 20.0);
+		addLocation("Paredes", 30.0, 30.0);
+		addLocation("Marco", 40.0, 40.0);
+
 		// GENERATE ROADS
-		connectPlaces(network, penafiel, paredes, 12.0);
-		connectPlaces(network, penafiel, marco, 14.0);
+		connectPlaces("Penafiel", "Paredes", 12.0);
+		connectPlaces("Penafiel", "Marco", 14.0);
 
 		//GENERATE TAXIS
-		Taxi taxi = new Taxi(space, network, penafiel); context.add(taxi); taxi.move(taxi.getInitialLocation());
-		System.out.println(network.getAdjacent(penafiel));
-		
-
-		Iterable<Object> locations = network.getAdjacent(penafiel);
-		Object closer = null;
-		double minimumWeigth = 1000;
-		for(Object lc : locations){
-			if(network.getEdge(penafiel, lc).getWeight() <= minimumWeigth){
-				System.out.println("New minimum: " + network.getEdge(penafiel, lc).getWeight());
-				closer = lc;
-				minimumWeigth = network.getEdge(penafiel, lc).getWeight();
-			}
-		}
-		
-		System.out.println(closer.toString());
-		
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		System.out.println("Moved");
-		taxi.move((Location)closer);
+		Taxi taxi = new Taxi(space, network, "Penafiel");
+		context.add(taxi); taxi.move(getLocation(taxi.getInitialLocation()));
 		
 		return context;
 	}

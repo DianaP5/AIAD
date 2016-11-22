@@ -9,10 +9,11 @@ public class Location {
 	private Network<Object> network;
 	private String name;
 	
-	// class constructor
 	public Location(String name, ContinuousSpace<Object> space, Network<Object> network) {
 		this.space = space ;
 		this.name = name;
 		this.network = network;
 	}
+	
+	public String getLocationName() {return name;}
 }
