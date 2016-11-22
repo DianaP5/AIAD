@@ -1,30 +1,14 @@
 package taxiManager;
 
 import java.util.ArrayList;
-
-import jade.core.AID;
-import jade.core.Profile;
-import jade.core.ProfileImpl;
-import jade.wrapper.StaleProxyException;
 import repast.simphony.context.Context;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactory;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactoryFinder;
 import repast.simphony.context.space.graph.NetworkBuilder;
-import repast.simphony.context.space.grid.GridFactory;
-import repast.simphony.context.space.grid.GridFactoryFinder;
 import repast.simphony.dataLoader.ContextBuilder;
-import repast.simphony.random.RandomHelper;
 import repast.simphony.space.continuous.ContinuousSpace;
-import repast.simphony.space.continuous.NdPoint;
 import repast.simphony.space.continuous.RandomCartesianAdder;
 import repast.simphony.space.graph.Network;
-import repast.simphony.space.grid.WrapAroundBorders;
-import sajas.core.Runtime;
-
-import repast.simphony.space.grid.Grid;
-import repast.simphony.space.grid.GridBuilderParameters;
-import repast.simphony.space.grid.SimpleGridAdder;
-
 
 public class mapBuilder implements ContextBuilder<Object> {
 
@@ -48,15 +32,23 @@ public class mapBuilder implements ContextBuilder<Object> {
 	
 	// adds a location to the map (random position)
 	private void addLocation(String locationName){
-		Location location = new Location(locationName, space, network);
-		context.add(location);
-		locations.add(location);
+		if(!locationExists(locationName)){
+			Location location = new Location(locationName, space, network);
+			context.add(location);
+			locations.add(location);
+		} else {
+			System.out.println("WARNING: A location names \"" + locationName + "\" already exists. New location will not be created.");
+		}
 	}
 	
 	// adds a location to the map (specified position)
 	private void addLocation(String locationName, double x, double y){
-		addLocation(locationName);
-		space.moveTo(getLocation(locationName), x, y);
+		if(!locationExists(locationName)){
+			addLocation(locationName);
+			space.moveTo(getLocation(locationName), x, y);
+		} else {
+			System.out.println("WARNING: A location names \"" + locationName + "\" already exists. New location will not be created.");
+		}
 	}
 	
 	// adds a road between two locations
@@ -85,6 +77,15 @@ public class mapBuilder implements ContextBuilder<Object> {
 		return location;
 	}
 	
+	// verifies if a location already exists
+	private boolean locationExists(String locationName){
+		for(int i = 0; i < locations.size(); i++){
+			if(locations.get(i).getLocationName() == locationName)
+				return true;
+		}
+		return false;
+	}
+	
 	@Override
 	public Context build(Context<Object> context) {
 		this.context = context;
@@ -108,6 +109,7 @@ public class mapBuilder implements ContextBuilder<Object> {
 		// GENERATE LOCATIONS
 		addLocation("Penafiel", 25.4, 19.0);
 		addLocation("Paredes", 32.6, 32.7);
+		addLocation("Penafiel", 0.0, 0.0);
 		addLocation("Marco", 47.7, 49.2);
 
 		// GENERATE ROADS
