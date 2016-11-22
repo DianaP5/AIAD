@@ -33,11 +33,11 @@ public class mapBuilder implements ContextBuilder<Object> {
 	//	MEMBER VARIABLES  
 	//						
 	////////////////////////
+	
 	private ArrayList<Location> locations = new ArrayList<Location>();	
 	private Context<Object> context;
 	private ContinuousSpace<Object> space;
 	private Network<Object> network;
-	
 	
 	////////////////////////
 	//						
@@ -45,24 +45,34 @@ public class mapBuilder implements ContextBuilder<Object> {
 	//						
 	////////////////////////
 	
-	// adds a location to the map
 	
+	// adds a location to the map (random position)
 	private void addLocation(String locationName){
-		addLocation(context, space, network, locationName);
-	}
-	
-	// creates a new location at a random place
-	private void addLocation(Context<Object> context,  ContinuousSpace<Object> space, Network<Object> network, String locationName){
 		Location location = new Location(locationName, space, network);
 		context.add(location);
 		locations.add(location);
 	}
-	// creates a new location at a specific place
+	
+	// adds a location to the map (specified position)
 	private void addLocation(String locationName, double x, double y){
-		addLocation(context, space, network, locationName);
+		addLocation(locationName);
 		space.moveTo(getLocation(locationName), x, y);
 	}
 	
+	// adds a road between two locations
+	private void connectPlaces(String srcName, String dstName, double weight){
+		Location src = getLocation(srcName);
+		Location dst = getLocation(dstName);
+		network.addEdge(src, dst).setWeight(weight);
+		network.addEdge(dst, src).setWeight(weight);
+	}
+	
+	// adds a taxi to the map
+	private void addTaxi(String initialPosition){
+		Taxi taxi = new Taxi(space, network, initialPosition);
+		context.add(taxi); 
+		taxi.move(getLocation(initialPosition));
+	}
 	
 	// returns a location given its name
 	private Location getLocation(String locationName){
@@ -75,20 +85,12 @@ public class mapBuilder implements ContextBuilder<Object> {
 		return location;
 	}
 	
-	// connects two locations
-	private void connectPlaces(String srcName, String dstName, double weight){
-		Location src = getLocation(srcName);
-		Location dst = getLocation(dstName);
-		network.addEdge(src, dst).setWeight(weight);
-		network.addEdge(dst, src).setWeight(weight);
-	}
-
 	@Override
 	public Context build(Context<Object> context) {
 		this.context = context;
 		this.context.setId("TaxiManager");
 		
-		// GENERATE SPACE
+		// GENERATE CONTINUOUS SPACE
 		ContinuousSpaceFactory spaceFactory = ContinuousSpaceFactoryFinder.createContinuousSpaceFactory( null );
 		space = spaceFactory.createContinuousSpace (
 				"space", 
@@ -104,17 +106,16 @@ public class mapBuilder implements ContextBuilder<Object> {
 		network = (Network<Object>) this.context.getProjection("network");
 				
 		// GENERATE LOCATIONS
-		addLocation("Penafiel", 20.0, 20.0);
-		addLocation("Paredes", 30.0, 30.0);
-		addLocation("Marco", 40.0, 40.0);
+		addLocation("Penafiel", 25.4, 19.0);
+		addLocation("Paredes", 32.6, 32.7);
+		addLocation("Marco", 47.7, 49.2);
 
 		// GENERATE ROADS
 		connectPlaces("Penafiel", "Paredes", 12.0);
 		connectPlaces("Penafiel", "Marco", 14.0);
 
 		//GENERATE TAXIS
-		Taxi taxi = new Taxi(space, network, "Penafiel");
-		context.add(taxi); taxi.move(getLocation(taxi.getInitialLocation()));
+		addTaxi("Penafiel");
 		
 		return context;
 	}
