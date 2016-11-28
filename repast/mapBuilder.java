@@ -107,17 +107,49 @@ public class mapBuilder implements ContextBuilder<Object> {
 		network = (Network<Object>) this.context.getProjection("network");
 				
 		// GENERATE LOCATIONS
-		addLocation("Penafiel", 25.4, 19.0);
-		addLocation("Paredes", 32.6, 32.7);
-		addLocation("Penafiel", 0.0, 0.0);
-		addLocation("Marco", 47.7, 49.2);
+		addLocation("Viana Do Castelo", 5.0, 47.0);
+		addLocation("Braga", 10.0, 43.0);
+		addLocation("Vila Real", 14.0, 40.0);
+		addLocation("Braganca", 20.0, 47.0);
+		addLocation("Porto", 7.0, 38.0);
+		addLocation("Aveiro", 5.5, 33.0);
+		addLocation("Viseu", 13.0, 33.0);
+		addLocation("Guarda", 18.0, 31.0);
+		addLocation("Coimbra", 10.5, 29.0);
+		addLocation("Leiria", 5.0, 25.0);
+		addLocation("Castelo Branco", 15.0, 25.0);
+		addLocation("Santarém", 5.1, 20.0);
+		addLocation("Portalegre", 17.0, 20.0);
+		addLocation("Lisboa", 3.0, 15.0);
+		addLocation("Setubal", 4.0, 12.0);
+		addLocation("Évora", 13.0, 12.0);
+		addLocation("Beja", 12.5, 7.0);
+		addLocation("Faro", 14.0, 0.0);
 
 		// GENERATE ROADS
-		connectPlaces("Penafiel", "Paredes", 12.0);
-		connectPlaces("Penafiel", "Marco", 14.0);
+		//ROAD_1
+		connectPlaces("Viana Do Castelo", "Porto", 5.0);
+		connectPlaces("Porto", "Viseu", 6.0);
+		connectPlaces("Viseu", "Castelo Branco", 9.0);
+		connectPlaces("Castelo Branco", "Santarém", 9.0);
+		connectPlaces("Santarém", "Lisboa", 7.0);
+		connectPlaces("Lisboa", "Évora", 7.0);
+		connectPlaces("Évora", "Faro", 14.0);
+		
+		//ROAD_2
+		connectPlaces("Braga", "Vila Real", 3.0);
+		connectPlaces("Vila Real", "Guarda", 8.0);
+		connectPlaces("Guarda", "Braganca", 12.0);
+		connectPlaces("Braganca", "Aveiro", 20.0);
+		connectPlaces("Aveiro", "Leiria", 10.0);
+		connectPlaces("Leiria", "Portalegre", 12.0);
+		connectPlaces("Portalegre", "Coimbra", 10.0);
+		connectPlaces("Coimbra", "Setubal", 18.0);
+		connectPlaces("Setubal", "Beja", 8.0);		
+		
 
 		//GENERATE TAXIS
-		addTaxi("Penafiel");
+		addTaxi("Guarda");
 		
 		return context;
 	}
