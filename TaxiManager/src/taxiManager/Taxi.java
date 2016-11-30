@@ -29,13 +29,6 @@ public class Taxi extends Agent {
 			MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL),
 			MessageTemplate.MatchContent("welcome")
 	);
-	
-	private void sendMessage(int performative, AID receiver, String content){
-		ACLMessage message = new ACLMessage(performative);
-		message.setContent(content);
-		message.addReceiver(receiver);
-		send(message);
-	}
 
 	public void move(Location dst) {
 		space.moveTo(this, space.getLocation(dst).getX(), space.getLocation(dst).getY());
@@ -53,7 +46,7 @@ public class Taxi extends Agent {
   		
 		System.out.println("Agent "+getName()+" found central:");
 
-		sendMessage(ACLMessage.REQUEST, central,"new_taxi");
+		Utilities.sendMessage(ACLMessage.REQUEST, central,"new_taxi", this);
 		
 		// process job proposals
 		addBehaviour(new CyclicBehaviour(this){
@@ -74,9 +67,9 @@ public class Taxi extends Agent {
 						srcPoint = srcPoint.substring(0, srcPoint.indexOf(';')); // System.out.println(srcPoint);
 						
 						if (passengers + weight <= CAPACITY) { // if taxi has enough capacity to transport the passengers	
-							sendMessage(ACLMessage.ACCEPT_PROPOSAL, central, "taxi_response;" + initialLocation);
+							Utilities.sendMessage(ACLMessage.ACCEPT_PROPOSAL, central, "taxi_response;" + initialLocation, myAgent);
 						} else {	
-							sendMessage(ACLMessage.REJECT_PROPOSAL, central, "taxi_response_no");
+							Utilities.sendMessage(ACLMessage.REJECT_PROPOSAL, central, "taxi_response_no", myAgent);
 						}
 					} else if (message.getPerformative() == ACLMessage.INFORM){
 						

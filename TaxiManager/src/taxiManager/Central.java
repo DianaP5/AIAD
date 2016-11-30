@@ -1,6 +1,7 @@
 package taxiManager;
 
 
+import jade.core.AID;
 import sajas.core.Agent;
 import sajas.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
@@ -16,7 +17,7 @@ import java.util.Random;
 public class Central extends Agent
 {
 
-	private ArrayList<String> companyTaxis = new ArrayList<String>();
+	private ArrayList<AID> companyTaxis = new ArrayList<AID>();
 	private final int NUMBER_TAXIS = 5;
 	private int taxis = NUMBER_TAXIS;
 	private ArrayList<Location> locations = new ArrayList<Location>();	
@@ -26,14 +27,6 @@ public class Central extends Agent
 	private int passNum = 0;	
 	// message template for requests
 	private MessageTemplate request = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
-	
-	// sends a message to an agent
-	private void sendMessage(int performative, String receiver, String content){
-		ACLMessage message = new ACLMessage(performative);
-		message.setContent(content);
-		message.addReceiver(getAID());
-		send(message);
-	}
 	
 	// reply to a received message
 	private void replyMessage(ACLMessage message, int performative, String content){
@@ -83,9 +76,14 @@ public class Central extends Agent
 		System.out.println("[CENTRAL] : CREATED");
 		Random r = new Random();
 		String moveTo = "";
+		
 		for (int i = 0; i < NUMBER_TAXIS; i++) {
 			moveTo = locations.get(r.nextInt(locations.size())).getLocationName();
 			Taxi taxi = new Taxi(space,network,moveTo);
+			AID taxiAID = new AID();
+			taxiAID.setName("Taxi"+i+"@Taxi Manager");
+			System.out.println("TAXI AID: " + taxiAID);
+			companyTaxis.add(taxiAID);
 			try {
 				this.getContainerController().acceptNewAgent("Taxi" + i, taxi).start();
 			} catch (StaleProxyException e) {
@@ -94,12 +92,11 @@ public class Central extends Agent
 			}
 			taxi.move(getLocation(moveTo));
 		}
-		
+		System.out.println("PRE"+companyTaxis);
 		// process requests
 		addBehaviour(new CyclicBehaviour() {
-
+			
 			public void action() {
-
 				// receive message from agent
 				ACLMessage message = myAgent.receive(request);
 
@@ -107,7 +104,7 @@ public class Central extends Agent
 
 					String content = message.getContent(); // get request
 															// content
-
+					
 					 if (content.contains("ask_taxi")) { // PROCESS 'ASK
 																// TAXI' REQUEST
 
@@ -119,12 +116,12 @@ public class Central extends Agent
 						int weight = Integer.parseInt(dstPoint.substring(dstPoint.indexOf(';') + 1)); // System.out.println(weight);
 						dstPoint = dstPoint.substring(0, dstPoint.indexOf(';')); // System.out.println(dstPoint);
 						srcPoint = srcPoint.substring(0, srcPoint.indexOf(';')); // System.out.println(srcPoint);
-
 						// send message to every taxi
-
+						
 						for (int i = 0; i < companyTaxis.size(); i++) {
-							sendMessage(ACLMessage.PROPOSE, companyTaxis.get(i), "taxi_proposal;" + srcPoint + ";" + dstPoint + ";" + weight);
-							System.out.println("[CENTRAL] : SENT MESSAGE TO " + companyTaxis.get(i));
+							Utilities.sendMessage(ACLMessage.PROPOSE, companyTaxis.get(i), "taxi_proposal;" + srcPoint + ";" + dstPoint + ";" + weight, myAgent);
+							System.out.println("[CENTRAL] : SENT MESSAGE TO " + companyTaxis.get(i).getName());
+							
 						}
 
 						int answers = 0;
@@ -152,8 +149,7 @@ public class Central extends Agent
 						replyMessage(message, ACLMessage.INFORM, "your_taxi;" + Integer.toString(taxiId));
 						System.out.println("[CENTRAL] : SENT 'TAXI CONFIRMATION MSG' TO PASSENGER " + message.getSender().getLocalName());
 
-						// inform taxi
-						sendMessage(ACLMessage.INFORM, "t1", "get_passenger;" + srcPoint + ";" + dstPoint + ";" + weight);
+						// TODO: inform selected taxi
 						
 					} else {
 						System.out.println("[CENTRAL] : "+content);
