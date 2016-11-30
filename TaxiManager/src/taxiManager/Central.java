@@ -1,17 +1,29 @@
 package taxiManager;
 
+
 import sajas.core.Agent;
 import sajas.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.wrapper.StaleProxyException;
+import repast.simphony.engine.schedule.ScheduledMethod;
+import repast.simphony.space.continuous.ContinuousSpace;
+import repast.simphony.space.graph.Network;
+
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Central extends Agent
 {
 
 	private ArrayList<String> companyTaxis = new ArrayList<String>();
-	private int taxis = 0;
-
+	private final int NUMBER_TAXIS = 5;
+	private int taxis = NUMBER_TAXIS;
+	private ArrayList<Location> locations = new ArrayList<Location>();	
+	private ContinuousSpace<Object> space;
+	private Network<Object> network;
+	
+	private int passNum = 0;	
 	// message template for requests
 	private MessageTemplate request = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
 	
@@ -19,7 +31,7 @@ public class Central extends Agent
 	private void sendMessage(int performative, String receiver, String content){
 		ACLMessage message = new ACLMessage(performative);
 		message.setContent(content);
-		//message.addReceiver(getAID(receiver));
+		message.addReceiver(getAID());
 		send(message);
 	}
 	
@@ -31,12 +43,58 @@ public class Central extends Agent
 		send(reply);
 	}
 	
+	// returns a location given its name
+	private Location getLocation(String locationName){
+		Location location = null;
+		for(int i = 0; i < locations.size(); i++) {
+			location = locations.get(i);
+			if(location.getLocationName() == locationName)
+				 break;
+		}
+		return location;
+	}
+	
+	public Central(ArrayList<Location> locations,ContinuousSpace<Object> space, Network<Object> network)
+	{
+		this.locations=locations;
+		this.network = network;
+		this.space = space;
+	}
+	
+	@ScheduledMethod(start = 100, interval = 100)
+	public void addPassenger()
+	{
+		Random r = new Random();
+		String moveTo = locations.get(r.nextInt(locations.size())).getLocationName();
+		Passenger pass = new Passenger(2,moveTo,"Aveiro");
+		try {
+			this.getContainerController().acceptNewAgent("Passenger" + passNum++, pass).start();
+			pass.move(getLocation(moveTo), space);
+			System.out.println("NASCI");
+		} catch (StaleProxyException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
 	// initialize central
 	protected void setup() {
-
+		
 		System.out.println("[CENTRAL] : CREATED");
-		System.out.println("[CENTRAL] : THERE ARE NOW " + taxis + " TAXIS");
-
+		Random r = new Random();
+		String moveTo = "";
+		for (int i = 0; i < NUMBER_TAXIS; i++) {
+			moveTo = locations.get(r.nextInt(locations.size())).getLocationName();
+			Taxi taxi = new Taxi(space,network,moveTo);
+			try {
+				this.getContainerController().acceptNewAgent("Taxi" + i, taxi).start();
+			} catch (StaleProxyException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			taxi.move(getLocation(moveTo));
+		}
+		
 		// process requests
 		addBehaviour(new CyclicBehaviour() {
 
@@ -50,18 +108,7 @@ public class Central extends Agent
 					String content = message.getContent(); // get request
 															// content
 
-					if (content.contains("new_taxi")) { // PROCESS 'NEW TAXI
-														// REQUEST'
-
-						// add taxi to data structure
-						System.out.println("[CENTRAL] : RECEIVED 'NEW TAXI MSG' FROM TAXI");
-						companyTaxis.add(message.getSender().getLocalName());
-
-						// confirm joining with taxi
-						replyMessage(message, ACLMessage.ACCEPT_PROPOSAL, "welcome");
-						
-
-					} else if (content.contains("ask_taxi")) { // PROCESS 'ASK
+					 if (content.contains("ask_taxi")) { // PROCESS 'ASK
 																// TAXI' REQUEST
 
 						System.out.println("[CENTRAL] : RECEIVED 'ASK TAXI MSG'");
@@ -72,9 +119,6 @@ public class Central extends Agent
 						int weight = Integer.parseInt(dstPoint.substring(dstPoint.indexOf(';') + 1)); // System.out.println(weight);
 						dstPoint = dstPoint.substring(0, dstPoint.indexOf(';')); // System.out.println(dstPoint);
 						srcPoint = srcPoint.substring(0, srcPoint.indexOf(';')); // System.out.println(srcPoint);
-
-						// block while the company has no taxis
-						while (companyTaxis.size() == 0) {}
 
 						// send message to every taxi
 
@@ -112,7 +156,7 @@ public class Central extends Agent
 						sendMessage(ACLMessage.INFORM, "t1", "get_passenger;" + srcPoint + ";" + dstPoint + ";" + weight);
 						
 					} else {
-						System.out.println("[CENTRAL] : RECEIVED UNKNOWN MESSAGE TYPE");
+						System.out.println("[CENTRAL] : "+content);
 					}
 				}
 			}

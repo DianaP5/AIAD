@@ -12,6 +12,8 @@ import repast.simphony.context.space.continuous.ContinuousSpaceFactory;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactoryFinder;
 import repast.simphony.context.space.graph.NetworkBuilder;
 import repast.simphony.dataLoader.ContextBuilder;
+import repast.simphony.engine.schedule.ScheduledMethod;
+import repast.simphony.engine.watcher.WatcherTriggerSchedule;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.continuous.RandomCartesianAdder;
 import repast.simphony.space.graph.Network;
@@ -135,7 +137,7 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		addLocation("Setubal", 4.0, 12.0);
 		addLocation("Évora", 13.0, 12.0);
 		addLocation("Beja", 12.5, 7.0);
-		addLocation("Faro", 14.0, 0.0);
+		addLocation("Faro", 14.0, 3.0);
 
 		// GENERATE ROADS
 		//ROAD_1
@@ -158,6 +160,7 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		connectPlaces("Coimbra", "Setubal", 18.0);
 		connectPlaces("Setubal", "Beja", 8.0);		
 		
+		System.out.println(locations.toString());
 		return super.build(context);
 	}
 
@@ -183,18 +186,11 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 	
 	private void launchAgents() {
 		try {
-			AID resultsCollectorAID = null;
-			Random r = new Random();
-			String moveTo = "";
-			for (int i = 0; i < 5; i++) {
-				moveTo = locations.get(r.nextInt(locations.size()-1)).getLocationName();
-				Taxi taxi = new Taxi(space,network,moveTo);
-				agentContainer.acceptNewAgent("Taxi" + i, taxi).start();
-				taxi.move(getLocation(moveTo));
-			}
 			
-			Central central = new Central();
+			
+			Central central = new Central(locations,space,network);
 			agentContainer.acceptNewAgent("Central", central).start();
+			
 			
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
