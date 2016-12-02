@@ -76,20 +76,19 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 	
 	// adds a taxi to the map
 	public void addTaxi(String initialPosition){
-		Taxi taxi = new Taxi(space, network, initialPosition);
+		Taxi taxi = new Taxi(space, network, initialPosition, locations);
 		context.add(taxi); 
 		taxi.move(getLocation(initialPosition));
 	}
 	
 	// returns a location given its name
-	public Location getLocation(String locationName){
-		Location location = null;
+	private Location getLocation(String locationName){
+		
 		for(int i = 0; i < locations.size(); i++) {
-			location = locations.get(i);
-			if(location.getLocationName() == locationName)
-				 break;
+			if(locations.get(i).getLocationName().equals(locationName))
+				return locations.get(i);
 		}
-		return location;
+		return null;
 	}
 	
 	// verifies if a location already exists
@@ -120,9 +119,7 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		NetworkBuilder<Object> netBuilder = new NetworkBuilder<Object>("network", this.context, true);
 		netBuilder.buildNetwork();
 		network = (Network<Object>) this.context.getProjection("network");
-		
-		/*
-				
+			
 		// GENERATE LOCATIONS
 		addLocation("Viana Do Castelo", 5.0, 47.0);
 		addLocation("Braga", 10.0, 43.0);
@@ -165,8 +162,8 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		connectPlaces("Coimbra", "Setubal", 18.0);
 		connectPlaces("Setubal", "Beja", 8.0);		
 		connectPlaces("Porto", "Coimbra", 2.0);
-		*/
-		
+
+		/*
 		// TEST MAP
 		addLocation("a", 10.0, 30.0);
 		addLocation("b", 10.0, 10.0);
@@ -184,7 +181,7 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		connectPlaces("e","f",2.0);
 		connectPlaces("f","c",3.0);
 		
-		
+		*/
 		return super.build(context);
 	}
 

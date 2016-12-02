@@ -39,40 +39,29 @@ public class Central extends Agent
 		
 	// Returns a location given its name
 	private Location getLocation(String locationName){
-		Location location = null;
+		
 		for(int i = 0; i < locations.size(); i++) {
-			location = locations.get(i);
-			if(location.getLocationName() == locationName)
-				 break;
+			if(locations.get(i).getLocationName().equals(locationName))
+				return locations.get(i);
 		}
-		return location;
+		return null;
 	}
 	
 	// Creates passengers in random places
-	@ScheduledMethod(start = 10, interval = 10)
+	@ScheduledMethod(start = 10, interval=10)
 	public void addPassenger()
 	{
 		Random r = new Random();
 		String src, dst; 
 		src = locations.get(r.nextInt(locations.size())).getLocationName();
 		do { dst = locations.get(r.nextInt(locations.size())).getLocationName(); } while(src.equals(dst));
-		Passenger pass = new Passenger(2,"a",dst);
+		Passenger pass = new Passenger(2,src,dst);
 		try {
 			this.getContainerController().acceptNewAgent("Passenger" + passNum++, pass).start();
-			pass.move(getLocation("a"), space);
+			pass.move(getLocation(src), space);
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	
-	// Prints a network path [DEBUG]
-	private void printPath(List<RepastEdge<Object> > path){
-		int i = 0;
-		for(; i < path.size(); i++){
-			System.out.print(path.get(i).getSource().toString() + " (" + path.get(i).getWeight() + ") ");
-		}
-		System.out.print("\n");
 	}
 	
 	// Initializes central
@@ -80,13 +69,12 @@ public class Central extends Agent
 	protected void setup() {
 		
 		System.out.print("Central Initialized | ");
-		
 		// Initialize the company taxis
 		Random r = new Random();
 		String moveTo = "";
 		for (int i = 0; i < taxis; i++) {
-			moveTo = "f"; // locations.get(r.nextInt(locations.size())).getLocationName(); 
-			Taxi taxi = new Taxi(space,network,moveTo);
+			moveTo = locations.get(r.nextInt(locations.size())).getLocationName(); 
+			Taxi taxi = new Taxi(space,network,moveTo,locations);
 			AID taxiAID = new AID();
 			taxiAID.setName("Taxi"+i+"@Taxi Manager");
 			taxi.setAID(taxiAID);
@@ -107,7 +95,7 @@ public class Central extends Agent
 			
 			int answers = 0;
 			ArrayList<Pair> accepted_taxis = new ArrayList<Pair>();
-			String data[];
+			ArrayList<String> data = new ArrayList<String>();
 			
 			public void action() {
 
@@ -124,7 +112,7 @@ public class Central extends Agent
 						// Process request content and send job proposal to every company taxi
 						data = Utilities.processServiceRequest(content);
 						for (int i = 0; i < companyTaxis.size(); i++) {
-							Utilities.sendMessage(ACLMessage.PROPOSE, companyTaxis.get(i).getAID(), "taxi_proposal;" + data[0] + ";" + data[1] + ";" + data[2], myAgent);
+							Utilities.sendMessage(ACLMessage.PROPOSE, companyTaxis.get(i).getAID(), "taxi_proposal;" + data.get(0) + ";" + data.get(1) + ";" + data.get(2), myAgent);
 							System.out.println("[CENTRAL] : SENT MESSAGE TO " + companyTaxis.get(i).getName());
 						}
 						
@@ -146,10 +134,15 @@ public class Central extends Agent
 					double distance;
 					Taxi choosenTaxi = null;
 					
+					//System.out.println(getLocation(data[1].toString()).getLocationName());
+					System.out.println(getLocation(data.get(0)));
+					System.out.println(data.get(1));
+					System.out.println(data.get(2));
+					System.out.println("I AM AT " + getLocation(companyTaxis.get(0).getCurrentLocation()).getLocationName() + " AND MUST GO TO " + getLocation(data.get(0)).getLocationName());
 					for (int i = 0; i < taxis; i++) {
-						distance = shortestPath.getPathLength(getLocation(companyTaxis.get(i).getCurrentLocation()), getLocation(data[0]));
+						distance = shortestPath.getPathLength(getLocation(companyTaxis.get(i).getCurrentLocation()), getLocation(data.get(0)));
 						System.out.println("Path length of " + companyTaxis.get(i).getLocalName() + " is " + distance);
-						System.out.print("Path is "); printPath(shortestPath.getPath(getLocation(companyTaxis.get(i).getCurrentLocation()), getLocation(data[0])));
+						System.out.print("Path is ");
 						if (distance < minimumDistance){
 							minimumDistance = distance;
 							choosenTaxi = companyTaxis.get(i);
@@ -160,7 +153,7 @@ public class Central extends Agent
 					answers = 0;
 					
 					// inform selected taxi and passenger
-					Utilities.sendMessage(ACLMessage.INFORM, choosenTaxi.getAID(), "ack;" + data[0], myAgent);
+					Utilities.sendMessage(ACLMessage.INFORM, choosenTaxi.getAID(), "ack;" + data.get(0), myAgent);
 					
 				}
 			}
