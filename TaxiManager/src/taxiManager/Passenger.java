@@ -1,40 +1,20 @@
 package taxiManager;
 
 import sajas.core.Agent;
-import sajas.core.behaviours.Behaviour;
-import sajas.core.behaviours.CyclicBehaviour;
 import sajas.core.behaviours.OneShotBehaviour;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
-import repast.simphony.engine.schedule.ScheduledMethod;
 import repast.simphony.space.continuous.ContinuousSpace;
 
 public class Passenger extends Agent
 {
-	private int weight;		// how much 'capacity' does the passenger need
+	// PASSENGER FIELDS
+	private int weight;			// how much 'capacity' does the passenger need
 	private String srcPoint;	// where the passenger initially is
 	private String dstPoint;	// where the passenger wants to go
 	private int cost = 0;		// how much will the passenger pay
-	private int taxiID;			// the taxi that the passenger must take
 	
-	// message template for central replies
-	private MessageTemplate centralReply = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
-	
-	// sets the taxi ID
-	public void setTaxiID(int taxiID){ this.taxiID = taxiID; }
-	
-	// increments the cost by a given amount
-	public void increaseCost(int cost){ this.cost += cost; }
-	
-	// sends a message to an agent
-	private void sendMessage(int performative, AID receiver, String content){
-		ACLMessage message = new ACLMessage(performative);
-		message.setContent(content);
-		message.addReceiver(receiver);
-		send(message);
-	}
-	
+	// Class constructor
 	public Passenger(int weight, String srcPoint, String dstPoint)
 	{
 		this.weight = weight;
@@ -42,45 +22,37 @@ public class Passenger extends Agent
 		this.dstPoint = dstPoint;
 	}
 	
+	// Increments the cost by a given amount
+	public void increaseCost(int cost){ this.cost += cost; }
+	
+	// Moves the passenger to a given location
 	public void move(Location dst, ContinuousSpace<Object> space) {
 		space.moveTo(this, space.getLocation(dst).getX(), space.getLocation(dst).getY());
 	}
 	
-	// initialize passenger
-	protected void setup()
-	{
+	// Initialize passenger
+	@Override
+	protected void setup() {
+		
+		// Prepare central AID for communication purposes
 		AID central = new AID();
-		central.setName("Central@Taxi Manager");
-		// try to parse passenger arguments
-		try {
+		central.setName(Utilities.CENTRAL_AID);
+	
+			if (weight > 1)
+				System.out.println("[PASSENGER] : " + weight + " people are waiting on " + srcPoint + " to go to " + dstPoint);
+			else
+				System.out.println("[PASSENGER] : I am waiting on " + srcPoint + " to go to " + dstPoint);
 			
-			System.out.println("[PASSENGER] : CREATED " + weight + " AND WAITING ON " + srcPoint + " TO GO TO " + dstPoint);
 			
-			// ask central for taxi
+			// Process messages
 			addBehaviour(new OneShotBehaviour(){
 				public void action() {
 					
-					// send a request message to the central
-					sendMessage(ACLMessage.REQUEST, central, "ask_taxi;" +  srcPoint + ";" + dstPoint + ";" + weight);
+					// Send a request to the central
+					Utilities.sendMessage(ACLMessage.REQUEST, central, "ask_taxi;" +  srcPoint + ";" + dstPoint + ";" + weight, myAgent);
 					
-					//ACLMessage reply = myAgent.receive();
-
-					/*while(reply == null)
-					{
-					}*/
-				
-	
-						// process reply content
-						/*String content = reply.getContent();
-						setTaxiID(Integer.parseInt(content.substring(content.indexOf(';') + 1)));
-						System.out.println("[PASSENGER] : WAITING FOR TAXI Nr " + taxiID);*/
-
 				}		
 			});
-		} 
-		catch(ArrayIndexOutOfBoundsException e) { System.out.println("[ERROR] : INVALID NUMBER OF ARGUMENTS WHILE CREATING 'PASSENGER'");  System.exit(1); }
-		catch (NumberFormatException e) { System.out.println("[ERROR] : INVALID CAPACITY WHILE CREATING PASSENGER");  System.exit(1); }
-		
 	}
 	
 	// take down passenger

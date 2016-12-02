@@ -1,23 +1,29 @@
 package taxiManager;
 
+import java.util.List;
+
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.graph.Network;
+import repast.simphony.space.graph.RepastEdge;
+import repast.simphony.space.graph.ShortestPath;
 import sajas.core.Agent;
 import sajas.core.behaviours.CyclicBehaviour;
 
 public class Taxi extends Agent {
 
+	// WORLD FIELDS
 	private ContinuousSpace<Object> space;
 	private Network<Object> network;
-	private String initialLocation;
-	private String currentLocation;
-	private AID resultsCollector;
-	private final int CAPACITY = 4; // fixed maximum capacity
-	private int passengers = 0;	// actual number of passenger inside the taxi
 	
+	// TAXI FIELDS
+	private String initialLocation;	// initial location
+	private String currentLocation;	// current location
+	private int passengers = 0;	// current number of passenger inside the taxi
+	private List<RepastEdge<Object> > path; // the path to follow
+	
+	// Class constructor
 	public Taxi(ContinuousSpace<Object> space, Network<Object> network, String initialLocation) {
 		this.space = space;
 		this.network = network;
@@ -25,62 +31,64 @@ public class Taxi extends Agent {
 		this.currentLocation = initialLocation;
 	}
 	
-	private MessageTemplate join = MessageTemplate.and(
-			MessageTemplate.MatchPerformative(ACLMessage.ACCEPT_PROPOSAL),
-			MessageTemplate.MatchContent("welcome")
-	);
-
+	// Move to specific location 
 	public void move(Location dst) {
 		space.moveTo(this, space.getLocation(dst).getX(), space.getLocation(dst).getY());
+		currentLocation = dst.getLocationName();
 	}
 
-	public String getInitialLocation() {
-		return initialLocation;
+	// Get current location
+	public String getCurrentLocation() {
+		return currentLocation;
 	}
-
+	
+	// Initialize agent
 	@Override
 	public void setup() {
-  		
-		AID central = new AID();
-		central.setName("Central@Taxi Manager");
-  		
-		System.out.println("Agent "+getName()+" found central:");
-
-		Utilities.sendMessage(ACLMessage.REQUEST, central,"new_taxi", this);
 		
-		// process job proposals
-		addBehaviour(new CyclicBehaviour(this){
+		System.out.println(getName() + " starting service in " + initialLocation);
+		
+		// Prepare central AID for communication purposes
+		AID central = new AID(); 
+		central.setName(Utilities.CENTRAL_AID);
+		
+		// Process job proposals
+		addBehaviour(new CyclicBehaviour(this) {
+
 			public void action() {
-				// receive message from agent
-				ACLMessage message = myAgent.receive();
-				if(message != null) {
+
+				ACLMessage message = myAgent.receive(); // Receive messages from central
+				if(message != null) {	
 					
-					 // process job proposals
+					// Process job proposals
 					if (message.getPerformative() == ACLMessage.PROPOSE) {
 						
-						// process request content
-						String content = message.getContent();
-						String srcPoint = content.substring(content.indexOf(';') + 1, content.length());
-						String dstPoint = srcPoint.substring(srcPoint.indexOf(';') + 1, srcPoint.length());
-						int weight = Integer.parseInt(dstPoint.substring(dstPoint.indexOf(';') + 1)); // System.out.println(weight);
-						dstPoint = dstPoint.substring(0, dstPoint.indexOf(';')); // System.out.println(dstPoint);
-						srcPoint = srcPoint.substring(0, srcPoint.indexOf(';')); // System.out.println(srcPoint);
+						// Process request content
+						String [] data = Utilities.processProposal(message.getContent());
+						// TODO: USE THE OTHER VARIABLES INTO SOMETHING USEFUL
+						int weight = Integer.parseInt(data[2]);
 						
-						if (passengers + weight <= CAPACITY) { // if taxi has enough capacity to transport the passengers	
-							Utilities.sendMessage(ACLMessage.ACCEPT_PROPOSAL, central, "taxi_response;" + initialLocation, myAgent);
-						} else {	
+						// If there is still capacity to transport the passengers...	
+						if (passengers + weight <= Utilities.TAXI_CAPACITY) 
+							Utilities.sendMessage(ACLMessage.ACCEPT_PROPOSAL, central, "taxi_response;" + currentLocation, myAgent);
+						else	
 							Utilities.sendMessage(ACLMessage.REJECT_PROPOSAL, central, "taxi_response_no", myAgent);
-						}
-					} else if (message.getPerformative() == ACLMessage.INFORM){
 						
-						// process request content
+					// Acknowledge jobs
+					} else if (message.getPerformative() == ACLMessage.INFORM){
+	
+						// Process request content
 						String content = message.getContent();
-						String srcPoint = content.substring(content.indexOf(';') + 1, content.length());
-						String dstPoint = srcPoint.substring(srcPoint.indexOf(';') + 1, srcPoint.length());
-						int weight = Integer.parseInt(dstPoint.substring(dstPoint.indexOf(';') + 1)); // System.out.println(weight);
-						dstPoint = dstPoint.substring(0, dstPoint.indexOf(';')); // System.out.println(dstPoint);
-						srcPoint = srcPoint.substring(0, srcPoint.indexOf(';')); // System.out.println(srcPoint);
-					}
+						String destination = content.substring(content.indexOf(';') + 1, content.length());
+						System.out.println("I'm the choosen one! I must go to " + destination);
+						
+						// Calculate shortest path to passenger location
+						ShortestPath<Object> shortestPath = new ShortestPath<Object>(network);
+						
+						System.out.println(space.getLocation(currentLocation) + " " + space.getLocation(destination));
+						//path = shortestPath.getPath(space.getLocation(currentLocation), space.getLocation(destination));
+						//System.out.println("I will follow the path : " + path.toString());
+					} 
 				} 
 			}
 		});

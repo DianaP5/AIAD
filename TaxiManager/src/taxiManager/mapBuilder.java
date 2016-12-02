@@ -29,6 +29,7 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 	//	MEMBER VARIABLES  
 	//						
 	////////////////////////
+	
 	public static final boolean SEPARATE_CONTAINERS = false;
 	private ArrayList<Location> locations = new ArrayList<Location>();	
 	private Context<Object> context;
@@ -36,6 +37,7 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 	private Network<Object> network;
 	private ContainerController mainContainer;
 	private ContainerController agentContainer;
+	
 	////////////////////////
 	//						
 	//	MEMBER METHODS
@@ -44,18 +46,18 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 	
 	
 	// adds a location to the map (random position)
-	private void addLocation(String locationName){
+	public void addLocation(String locationName){
 		if(!locationExists(locationName)){
 			Location location = new Location(locationName, space, network);
-			context.add(location);
 			locations.add(location);
+			context.add(location);
 		} else {
 			System.out.println("WARNING: A location names \"" + locationName + "\" already exists. New location will not be created.");
 		}
 	}
 	
 	// adds a location to the map (specified position)
-	private void addLocation(String locationName, double x, double y){
+	public void addLocation(String locationName, double x, double y){
 		if(!locationExists(locationName)){
 			addLocation(locationName);
 			space.moveTo(getLocation(locationName), x, y);
@@ -65,7 +67,7 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 	}
 	
 	// adds a road between two locations
-	private void connectPlaces(String srcName, String dstName, double weight){
+	public void connectPlaces(String srcName, String dstName, double weight){
 		Location src = getLocation(srcName);
 		Location dst = getLocation(dstName);
 		network.addEdge(src, dst).setWeight(weight);
@@ -73,14 +75,14 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 	}
 	
 	// adds a taxi to the map
-	private void addTaxi(String initialPosition){
+	public void addTaxi(String initialPosition){
 		Taxi taxi = new Taxi(space, network, initialPosition);
 		context.add(taxi); 
 		taxi.move(getLocation(initialPosition));
 	}
 	
 	// returns a location given its name
-	private Location getLocation(String locationName){
+	public Location getLocation(String locationName){
 		Location location = null;
 		for(int i = 0; i < locations.size(); i++) {
 			location = locations.get(i);
@@ -91,7 +93,7 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 	}
 	
 	// verifies if a location already exists
-	private boolean locationExists(String locationName){
+	public boolean locationExists(String locationName){
 		for(int i = 0; i < locations.size(); i++){
 			if(locations.get(i).getLocationName() == locationName)
 				return true;
@@ -118,6 +120,8 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		NetworkBuilder<Object> netBuilder = new NetworkBuilder<Object>("network", this.context, true);
 		netBuilder.buildNetwork();
 		network = (Network<Object>) this.context.getProjection("network");
+		
+		/*
 				
 		// GENERATE LOCATIONS
 		addLocation("Viana Do Castelo", 5.0, 47.0);
@@ -131,11 +135,11 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		addLocation("Coimbra", 10.5, 29.0);
 		addLocation("Leiria", 5.0, 25.0);
 		addLocation("Castelo Branco", 15.0, 25.0);
-		addLocation("Santarém", 5.1, 20.0);
+		addLocation("Santarem", 5.1, 20.0);
 		addLocation("Portalegre", 17.0, 20.0);
 		addLocation("Lisboa", 3.0, 15.0);
 		addLocation("Setubal", 4.0, 12.0);
-		addLocation("Évora", 13.0, 12.0);
+		addLocation("Evora", 13.0, 12.0);
 		addLocation("Beja", 12.5, 7.0);
 		addLocation("Faro", 14.0, 3.0);
 
@@ -144,10 +148,11 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		connectPlaces("Viana Do Castelo", "Porto", 5.0);
 		connectPlaces("Porto", "Viseu", 6.0);
 		connectPlaces("Viseu", "Castelo Branco", 9.0);
-		connectPlaces("Castelo Branco", "Santarém", 9.0);
-		connectPlaces("Santarém", "Lisboa", 7.0);
-		connectPlaces("Lisboa", "Évora", 7.0);
-		connectPlaces("Évora", "Faro", 14.0);
+		connectPlaces("Castelo Branco", "Santarem", 9.0);
+		connectPlaces("Santarem", "Lisboa", 7.0);
+		connectPlaces("Lisboa", "Evora", 7.0);
+		connectPlaces("Evora", "Faro", 14.0);
+		connectPlaces("Porto", "Aveiro", 1.0);
 		
 		//ROAD_2
 		connectPlaces("Braga", "Vila Real", 3.0);
@@ -159,8 +164,27 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		connectPlaces("Portalegre", "Coimbra", 10.0);
 		connectPlaces("Coimbra", "Setubal", 18.0);
 		connectPlaces("Setubal", "Beja", 8.0);		
+		connectPlaces("Porto", "Coimbra", 2.0);
+		*/
 		
-		System.out.println(locations.toString());
+		// TEST MAP
+		addLocation("a", 10.0, 30.0);
+		addLocation("b", 10.0, 10.0);
+		addLocation("c", 30.0, 30.0);
+		addLocation("d", 30.0, 10.0);
+		addLocation("e", 45.0, 15.0);
+		addLocation("f", 45.0, 45.0);
+		connectPlaces("a","b",4.0);
+		connectPlaces("a","c",3.0);
+		connectPlaces("a","d",5.0);
+		connectPlaces("b","d",2.0);
+		connectPlaces("d","c",3.0);
+		connectPlaces("e","d",3.0);
+		connectPlaces("e","c",2.0);
+		connectPlaces("e","f",2.0);
+		connectPlaces("f","c",3.0);
+		
+		
 		return super.build(context);
 	}
 
