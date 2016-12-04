@@ -1,5 +1,9 @@
 package taxiManager;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -216,5 +220,37 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	//Not Tested
+	public void txtToCode(String locationsFile, String connectFile) throws IOException
+	{
+		//Linha exemplo no locationsFile .txt
+		//Localidade;x;y
+		FileReader locFile = new FileReader(locationsFile);
+		BufferedReader locReader = new BufferedReader(locFile);
+		String loc_line;
+		
+		while((loc_line = locReader.readLine())!=null)
+		{
+			String [] splitter = loc_line.split(";");
+			addLocation(splitter[0], Double.parseDouble(splitter[1]),Double.parseDouble(splitter[2]));
+		}
+		
+		locReader.close();
+		
+		//Linha exemplo no connectFile .txt
+		//src;dst;weigth
+		FileReader conFile = new FileReader(connectFile);
+		BufferedReader conReader = new BufferedReader(conFile);
+		String con_line;
+		
+		while((con_line = conReader.readLine())!=null)
+		{
+			String [] splitter = con_line.split(";");
+			connectPlaces(splitter[0], splitter[1], Double.parseDouble(splitter[2]));
+		}
+		
+		conReader.close();
 	}
 }
