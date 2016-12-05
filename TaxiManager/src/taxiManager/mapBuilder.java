@@ -235,6 +235,7 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 	{
 		//Linha exemplo no locationsFile .txt
 		//Localidade;x;y
+		
 		FileReader locFile = new FileReader(locationsFile);
 		BufferedReader locReader = new BufferedReader(locFile);
 		String loc_line;
@@ -249,6 +250,7 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		
 		//Linha exemplo no connectFile .txt
 		//src;dst;weigth
+		
 		FileReader conFile = new FileReader(connectFile);
 		BufferedReader conReader = new BufferedReader(conFile);
 		String con_line;
