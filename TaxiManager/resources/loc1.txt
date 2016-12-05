@@ -1,0 +1,18 @@
+"Viana Do Castelo"; 5.0; 47.0
+"Braga"; 10.0; 43.0
+"Vila Real"; 14.0; 40.0
+"Braganca"; 20.0; 47.0
+"Porto"; 7.0; 38.0
+"Aveiro"; 5.5; 33.0
+"Viseu"; 13.0; 33.0
+"Guarda"; 18.0; 31.0
+"Coimbra"; 10.5; 29.0
+"Leiria"; 5.0; 25.0
+"Castelo Branco"; 15.0; 25.0
+"Santarem"; 5.1; 20.0
+"Portalegre"; 17.0; 20.0
+"Lisboa"; 3.0; 15.0
+"Setubal"; 4.0; 12.0
+"Evora"; 13.0; 12.0
+"Beja"; 12.5; 7.0
+"Faro"; 14.0; 3.0
