@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -125,7 +126,14 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		network = (Network<Object>) this.context.getProjection("network");
 			
 		// GENERATE LOCATIONS
-		addLocation("Viana Do Castelo", 5.0, 47.0);
+		try {
+			txtToCode("resources/loc1.txt", "resources/con1.txt");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		/*addLocation("Viana Do Castelo", 5.0, 47.0);
 		addLocation("Braga", 10.0, 43.0);
 		addLocation("Vila Real", 14.0, 40.0);
 		addLocation("Braganca", 20.0, 47.0);
@@ -165,7 +173,7 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		connectPlaces("Portalegre", "Coimbra", 10.0);
 		connectPlaces("Coimbra", "Setubal", 18.0);
 		connectPlaces("Setubal", "Beja", 8.0);		
-		connectPlaces("Porto", "Coimbra", 2.0);
+		connectPlaces("Porto", "Coimbra", 2.0);*/
 
 		/*
 		// TEST MAP
