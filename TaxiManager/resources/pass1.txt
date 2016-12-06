@@ -1,0 +1,2 @@
+2;Porto;Viana do Castelo
+3;Lisboa;Setubal

@@ -12,6 +12,9 @@ import repast.simphony.space.graph.Network;
 import repast.simphony.space.graph.RepastEdge;
 import repast.simphony.space.graph.ShortestPath;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -90,6 +93,13 @@ public class Central extends Agent
 
 		System.out.println("Taxis Initialized");
 		
+		//Add passengers from the txt file
+		/*try {
+			txtToAgent("resources/pass1.txt");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}*/
+		
 		// Process requests
 		addBehaviour(new CyclicBehaviour() {
 			
@@ -163,5 +173,35 @@ public class Central extends Agent
 	// terminate central
 	protected void takeDown() {
 		System.out.println("[CENTRAL] : TERMINATED");
+	}
+	
+	public void txtToAgent(String agentsFile) throws IOException
+	{
+		//Passenger
+		//weight;src;dst
+		FileReader agentFile = new FileReader(agentsFile);
+		BufferedReader agentReader = new BufferedReader(agentFile);
+		String loc_line;
+		
+		while((loc_line = agentReader.readLine())!=null)
+		{
+			String [] splitter = loc_line.split(";");
+			String weight = splitter[0];
+			String src = splitter[1];
+			String dst = splitter[2];
+			Passenger pass = new Passenger(Integer.parseInt(weight),src,dst);
+			try 
+			{
+				this.getContainerController().acceptNewAgent("Passenger" + passNum++, pass).start();
+			} 
+			catch (StaleProxyException e) 
+			{
+				e.printStackTrace();
+			}
+			
+			pass.move(getLocation(src), space);
+		}
+		
+		agentReader.close();
 	}
 }
