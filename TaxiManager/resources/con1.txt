@@ -1,18 +1,18 @@
-"Viana Do Castelo"; "Porto"; 5.0
-"Porto"; "Viseu"; 6.0
-"Viseu"; "Castelo Branco"; 9.0
-"Castelo Branco"; "Santarem"; 9.0
-"Santarem"; "Lisboa"; 7.0
-"Lisboa"; "Evora"; 7.0
-"Evora"; "Faro"; 14.0
-"Porto"; "Aveiro"; 1.0
-"Braga"; "Vila Real"; 3.0
-"Vila Real"; "Guarda"; 8.0
-"Guarda"; "Braganca"; 12.0
-"Braganca"; "Aveiro"; 20.0
-"Aveiro"; "Leiria"; 10.0
-"Leiria"; "Portalegre"; 12.0
-"Portalegre"; "Coimbra"; 10.0
-"Coimbra"; "Setubal"; 18.0
-"Setubal"; "Beja"; 8.0	
-"Porto"; "Coimbra"; 2.0
+Viana Do Castelo;Porto;5.0
+Porto;Viseu;6.0
+Viseu;Castelo Branco;9.0
+Castelo Branco;Santarem;9.0
+Santarem;Lisboa;7.0
+Lisboa;Evora;7.0
+Evora;Faro;14.0
+Porto;Aveiro;1.0
+Braga;Vila Real;3.0
+Vila Real;Guarda;8.0
+Guarda;Braganca;12.0
+Braganca;Aveiro;20.0
+Aveiro;Leiria;10.0
+Leiria;Portalegre;12.0
+Portalegre;Coimbra;10.0
+Coimbra;Setubal;18.0
+Setubal;Beja;8.0	
+Porto;Coimbra;2.0
