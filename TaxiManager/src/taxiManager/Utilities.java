@@ -28,12 +28,13 @@ public class Utilities {
 	}
 	
 	// GLOBAL VARIABLES
-	public final static double MAXIMUM_DISTANCE = 100000.0;
+	public final static double MAXIMUM_DISTANCE = Double.POSITIVE_INFINITY;
 	
 	// SIMULATION VARIABLES
-	public final static int NUMBER_TAXIS = 5;	// initial number of taxis in the company
+	public final static int NUMBER_TAXIS = 2;	// initial number of taxis in the company
 	public final static int TAXI_CAPACITY = 4;  // maximum capacity of taxis
 	public final static String CENTRAL_AID = "Central@Taxi Manager";	// central fixed AID
+	public final static int FIRST_SERVED = 1;
+	public final static int strategy = FIRST_SERVED;
 	
-
 }

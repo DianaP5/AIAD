@@ -25,7 +25,7 @@ public class Taxi extends Agent {
 	private String currentLocation;	// current location
 	private int passengers = 0;	// current number of passenger inside the taxi
 	private ArrayList<Location> locations;
-	private List<RepastEdge<Object> > path; // the path to follow
+	private List<RepastEdge<Object> > path = new ArrayList<RepastEdge<Object> >(); // the path to follow
 	
 	// Class constructor
 	public Taxi(ContinuousSpace<Object> space, Network<Object> network, String initialLocation, ArrayList<Location> locations) {
@@ -35,6 +35,35 @@ public class Taxi extends Agent {
 		this.currentLocation = initialLocation;
 		this.locations = locations;
 	}
+	
+	// Prints the path to follow
+	public void dumpPath(){
+		int i = 0;
+		for(; i < path.size(); i++){
+			System.out.print(path.get(i).getSource() + " -> ");
+		}
+		System.out.println(path.get(--i).getTarget());
+	}
+	
+	// Return the last stop
+	public Location lastStop() {
+		if(!path.isEmpty())
+			return (Location) path.get(path.size()).getTarget();
+		return null;
+			
+	}
+	
+	// Return the sum of the edges still to be traveled
+	public double distanceStillToTravel() {
+		double sum = 0.0;
+		for(int i = 0; i < path.size(); i++){
+			sum += path.get(i).getWeight();
+		}
+		return sum;
+	}
+	
+	// Tells if the taxi is empty
+	public boolean isEmpty() { return (passengers == 0); }
 	
 	// Returns a location given its name
 	private Location getLocation(String locationName){
@@ -70,8 +99,10 @@ public class Taxi extends Agent {
 		// Process job proposals
 		addBehaviour(new CyclicBehaviour(this) {
 
+			ArrayList<String> data = new ArrayList<String>();
+			
 			public void action() {
-
+				
 				ACLMessage message = myAgent.receive(); // Receive messages from central
 				if(message != null) {	
 					
@@ -79,8 +110,7 @@ public class Taxi extends Agent {
 					if (message.getPerformative() == ACLMessage.PROPOSE) {
 						
 						// Process request content
-						ArrayList<String> data = Utilities.processProposal(message.getContent());
-						// TODO: USE THE OTHER VARIABLES INTO SOMETHING USEFUL
+						data = Utilities.processProposal(message.getContent());
 						int weight = Integer.parseInt(data.get(2));
 						
 						// If there is still capacity to transport the passengers...	
@@ -90,43 +120,38 @@ public class Taxi extends Agent {
 							Utilities.sendMessage(ACLMessage.REJECT_PROPOSAL, central, "taxi_response_no", myAgent);
 						
 					// Acknowledge jobs
-					} else if (message.getPerformative() == ACLMessage.INFORM){
-	
-						// Process request content
-						String content = message.getContent();
-						String destination = content.substring(content.indexOf(';') + 1, content.length());
-						System.out.println("I'm the choosen one! I must go to " + destination);
+					} else if (message.getPerformative() == ACLMessage.INFORM) {
 						
-						// Calculate shortest path to passenger location
-						ShortestPath<Object> shortestPath = new ShortestPath<Object>(network);
+						// Calculate shortest path needed to fulfill service
+						ShortestPath<Object> shortestPath = new ShortestPath<Object>(network);	
 						
-						path = shortestPath.getPath(getLocation(currentLocation),getLocation(destination));
-						System.out.println("I will follow the path : " + path.toString());
-						for(int i = 0 ; i < path.size(); i++){
+						if(isEmpty()) {
+							path.addAll(shortestPath.getPath(getLocation(currentLocation), getLocation(data.get(0))));
+						} else {
+							path.addAll(shortestPath.getPath(lastStop(), getLocation(data.get(0))));
+						}
+						
+						path.addAll(shortestPath.getPath(getLocation(data.get(0)), getLocation(data.get(1))));
+						
+						// Move taxi accordingly
+						for(int i = 0 ; i < path.size(); i++) {
 							move((Location) path.get(i).getTarget());
+							// When passenger source location is reached...
+							AID passengerAID = new AID();
+							passengerAID.setName(message.getContent());
+							if(currentLocation.equals(data.get(0))) {
+								Utilities.sendMessage(ACLMessage.INFORM, passengerAID, "Hello", myAgent);
+							} else if(currentLocation.equals(data.get(1))) {
+								Utilities.sendMessage(ACLMessage.CONFIRM, passengerAID, Double.toString(path.get(i).getWeight()), myAgent);
+							} else {
+								Utilities.sendMessage(ACLMessage.SUBSCRIBE, passengerAID, Double.toString(path.get(i).getWeight()), myAgent);
+							}
 						}
 					} 
 				} 
 			}
 		});
 	}
-	
-	public void moveTowards (RepastEdge<Object> edge) {
-		Location loc = (Location) edge.getTarget();
-		NdPoint myPoint, nextStop;
-		double w,g = 0;
-		w=edge.getWeight();
-		System.out.println(loc);
-		while(g<w){
-			myPoint = space.getLocation(this);
-			nextStop = new NdPoint(loc.x, loc.y);
-			double angle = SpatialMath.calcAngleFor2DMovement(space, nextStop, myPoint);
-			System.out.println(angle);
-			space.moveByVector(this, edge.getWeight(), 0.785398163, 0);
-			g++;
-		}
-	}
-
 	
 	protected void takeDown()
 	{

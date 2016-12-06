@@ -93,30 +93,24 @@ public class Central extends Agent
 
 		System.out.println("Taxis Initialized");
 		
-		//Add passengers from the txt file
-		/*try {
-			txtToAgent("resources/pass1.txt");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
-		
 		// Process requests
 		addBehaviour(new CyclicBehaviour() {
 			
 			int answers = 0;
 			ArrayList<Pair> accepted_taxis = new ArrayList<Pair>();
 			ArrayList<String> data = new ArrayList<String>();
+			String clientName = new String();
 			
 			public void action() {
 
 				ACLMessage message = myAgent.receive();	// Receives requests
-				
 				if (message != null) {
 
 					String content = message.getContent();
-					
+
 					 if (content.contains("ask_taxi")) { // Process request for taxi
 
+						clientName = message.getSender().getName();
 						System.out.println("[CENTRAL] : RECEIVED 'ASK TAXI MSG'");
 
 						// Process request content and send job proposal to every company taxi
@@ -138,43 +132,44 @@ public class Central extends Agent
 					 
 				} else if (answers >= companyTaxis.size()) {
 					
-					// TODO: check which of the taxis is closer and choose that taxi
-					ShortestPath<Object> shortestPath = new ShortestPath<Object>(network);
-					double minimumDistance = Utilities.MAXIMUM_DISTANCE;
-					double distance;
-					Taxi choosenTaxi = null;
-					
-					//System.out.println(getLocation(data[1].toString()).getLocationName());
-					System.out.println(getLocation(data.get(0)));
-					System.out.println(data.get(1));
-					System.out.println(data.get(2));
-					System.out.println("I AM AT " + getLocation(companyTaxis.get(0).getCurrentLocation()).getLocationName() + " AND MUST GO TO " + getLocation(data.get(0)).getLocationName());
-					for (int i = 0; i < taxis; i++) {
-						distance = shortestPath.getPathLength(getLocation(companyTaxis.get(i).getCurrentLocation()), getLocation(data.get(0)));
-						System.out.println("Path length of " + companyTaxis.get(i).getLocalName() + " is " + distance);
-						System.out.print("Path is ");
-						if (distance < minimumDistance){
-							minimumDistance = distance;
-							choosenTaxi = companyTaxis.get(i);
-						}
+					if(Utilities.strategy == Utilities.FIRST_SERVED) {
+						
+						System.out.println("\n:: FIRST-COME - FIRST-SERVED ::");
+						ShortestPath<Object> shortestPath = new ShortestPath<Object>(network);
+						double minimumDistance = Utilities.MAXIMUM_DISTANCE;
+						double totalDistance, distanceNeeded;
+						Taxi choosenTaxi = null;
+						
+							// for each company taxi...
+							for (int i = 0; i < taxis; i++) {
+								
+								// calculate minimum distance needed to serve next passenger
+								if(companyTaxis.get(i).isEmpty()) {
+									distanceNeeded = shortestPath.getPathLength(getLocation(companyTaxis.get(i).getCurrentLocation()), getLocation(data.get(0)));
+								} else {
+									distanceNeeded = shortestPath.getPathLength(companyTaxis.get(i).lastStop(), getLocation(data.get(0)));
+								}
+								distanceNeeded += shortestPath.getPathLength(getLocation(data.get(0)), getLocation(data.get(1)));
+								// calculate minimum total distance needed
+								totalDistance = companyTaxis.get(i).distanceStillToTravel() + distanceNeeded;
+								
+								if (totalDistance < minimumDistance){
+									minimumDistance = totalDistance;
+									choosenTaxi = companyTaxis.get(i);
+								}
+							}
+						
+						System.out.println("THE TAXI TO TAKE YOU WILL BE : " + choosenTaxi.getLocalName());	
+						
+						// inform selected taxi and passenger
+						Utilities.sendMessage(ACLMessage.INFORM, choosenTaxi.getAID(), clientName, myAgent);
+						answers = 0; // restart variable for future requests
 					}
-					
-					System.out.println("THE TAXI TO TAKE YOU WILL BE : " + choosenTaxi.getLocalName());						
-					answers = 0;
-					
-					// inform selected taxi and passenger
-					Utilities.sendMessage(ACLMessage.INFORM, choosenTaxi.getAID(), "ack;" + data.get(0), myAgent);
-					
 				}
 			}
 		});
 	}
 
-	// terminate central
-	protected void takeDown() {
-		System.out.println("[CENTRAL] : TERMINATED");
-	}
-	
 	public void txtToAgent(String agentsFile) throws IOException
 	{
 		//Passenger
@@ -203,5 +198,10 @@ public class Central extends Agent
 		}
 		
 		agentReader.close();
+	}
+	
+	// terminate central
+	protected void takeDown() {
+		System.out.println("[CENTRAL] : TERMINATED");
 	}
 }

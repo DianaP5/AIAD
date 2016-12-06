@@ -1,10 +1,8 @@
 package taxiManager;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -17,7 +15,9 @@ import repast.simphony.context.space.continuous.ContinuousSpaceFactory;
 import repast.simphony.context.space.continuous.ContinuousSpaceFactoryFinder;
 import repast.simphony.context.space.graph.NetworkBuilder;
 import repast.simphony.dataLoader.ContextBuilder;
+import repast.simphony.engine.schedule.Schedule;
 import repast.simphony.engine.schedule.ScheduledMethod;
+import repast.simphony.engine.schedule.ScheduleParameters;
 import repast.simphony.engine.watcher.WatcherTriggerSchedule;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.continuous.RandomCartesianAdder;
@@ -124,17 +124,8 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		NetworkBuilder<Object> netBuilder = new NetworkBuilder<Object>("network", this.context, true);
 		netBuilder.buildNetwork();
 		network = (Network<Object>) this.context.getProjection("network");
-			
-		//Add locations from file
-		
-		/*try {
-			txtToCode("resources/loc1.txt", "resources/con1.txt");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}*/
-		
+			/*
 		// GENERATE LOCATIONS
-		
 		addLocation("Viana Do Castelo", 5.0, 47.0);
 		addLocation("Braga", 10.0, 43.0);
 		addLocation("Vila Real", 14.0, 40.0);
@@ -177,7 +168,7 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		connectPlaces("Setubal", "Beja", 8.0);		
 		connectPlaces("Porto", "Coimbra", 2.0);
 
-		/*
+		*/
 		// TEST MAP
 		addLocation("a", 10.0, 30.0);
 		addLocation("b", 10.0, 10.0);
@@ -195,10 +186,19 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		connectPlaces("e","f",2.0);
 		connectPlaces("f","c",3.0);
 		
-		*/
+		
+		// Clean everything before the simulation ends
+		Schedule scheduler = new Schedule();
+		ScheduleParameters stop = ScheduleParameters.createAtEnd(ScheduleParameters.END);
+		scheduler.schedule(stop, this, "endSimulation");
+		
 		return super.build(context);
 	}
 
+	public void endSimulation(){
+		System.out.println("END OF SIMULATION");
+	}
+	
 	@Override
 	public String getName() {
 		return "Taxi Manager";
@@ -233,36 +233,37 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 	}
 	
 	//Not Tested
-	public void txtToCode(String locationsFile, String connectFile) throws IOException
-	{
-		//Linha exemplo no locationsFile .txt
-		//Localidade;x;y
-		
-		FileReader locFile = new FileReader(locationsFile);
-		BufferedReader locReader = new BufferedReader(locFile);
-		String loc_line;
-		
-		while((loc_line = locReader.readLine())!=null)
+		public void txtToCode(String locationsFile, String connectFile) throws IOException
 		{
-			String [] splitter = loc_line.split(";");
-			addLocation(splitter[0], Double.parseDouble(splitter[1]),Double.parseDouble(splitter[2]));
+			//Linha exemplo no locationsFile .txt
+			//Localidade;x;y
+			
+			FileReader locFile = new FileReader(locationsFile);
+			BufferedReader locReader = new BufferedReader(locFile);
+			String loc_line;
+			
+			while((loc_line = locReader.readLine())!=null)
+			{
+				String [] splitter = loc_line.split(";");
+				addLocation(splitter[0], Double.parseDouble(splitter[1]),Double.parseDouble(splitter[2]));
+			}
+			
+			locReader.close();
+			
+			//Linha exemplo no connectFile .txt
+			//src;dst;weigth
+			
+			FileReader conFile = new FileReader(connectFile);
+			BufferedReader conReader = new BufferedReader(conFile);
+			String con_line;
+			
+			while((con_line = conReader.readLine())!=null)
+			{
+				String [] splitter = con_line.split(";");
+				connectPlaces(splitter[0], splitter[1], Double.parseDouble(splitter[2]));
+			}
+			
+			conReader.close();
 		}
-		
-		locReader.close();
-		
-		//Linha exemplo no connectFile .txt
-		//src;dst;weigth
-		
-		FileReader conFile = new FileReader(connectFile);
-		BufferedReader conReader = new BufferedReader(conFile);
-		String con_line;
-		
-		while((con_line = conReader.readLine())!=null)
-		{
-			String [] splitter = con_line.split(";");
-			connectPlaces(splitter[0], splitter[1], Double.parseDouble(splitter[2]));
-		}
-		
-		conReader.close();
-	}
+	
 }

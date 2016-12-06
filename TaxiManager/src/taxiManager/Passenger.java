@@ -1,10 +1,13 @@
 package taxiManager;
 
 import sajas.core.Agent;
+import sajas.core.behaviours.CyclicBehaviour;
 import sajas.core.behaviours.OneShotBehaviour;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
+import repast.simphony.context.Context;
 import repast.simphony.space.continuous.ContinuousSpace;
+import repast.simphony.util.ContextUtils;
 
 public class Passenger extends Agent
 {
@@ -44,17 +47,42 @@ public class Passenger extends Agent
 				System.out.println("[PASSENGER] : I am waiting on " + srcPoint + " to go to " + dstPoint);
 			
 			
-			// Process messages
+			// Send a 'request for taxi'
 			addBehaviour(new OneShotBehaviour(){
 				public void action() {
 					
 					// Send a request to the central
 					Utilities.sendMessage(ACLMessage.REQUEST, central, "ask_taxi;" +  srcPoint + ";" + dstPoint + ";" + weight, myAgent);
-					
+	
 				}		
 			});
+			
+			// Process taxi messages
+			addBehaviour(new CyclicBehaviour(){
+				boolean received = false;
+				public void action() {
+					// Receive confirmation from taxi
+					ACLMessage message = myAgent.receive();	
+					if (message != null) {
+						if(message.getPerformative() == ACLMessage.INFORM && !received){
+							System.out.println("[PASSENGER " + myAgent.getLocalName() + "] Received : " + message.getContent());
+							Context<Object> context = ContextUtils.getContext(myAgent);
+							context.remove(myAgent);
+							received = true;
+						} else if(message.getPerformative() == ACLMessage.CONFIRM ){
+							cost += Double.parseDouble(message.getContent());
+							System.out.println("I paied a total of " + cost);
+							myAgent.doDelete();
+							received = false;
+						} else if(message.getPerformative() == ACLMessage.SUBSCRIBE){
+							cost += Double.parseDouble(message.getContent());
+						}
+					}
+				}
+			});
+			
 	}
 	
 	// take down passenger
-	protected void takeDown() { System.out.println("[PASSENGER] : DESTINY LOCATION REACHED"); }
+	protected void takeDown() {}
 }
