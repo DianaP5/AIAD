@@ -15,7 +15,8 @@ public class Passenger extends Agent
 	private int weight;			// how much 'capacity' does the passenger need
 	private String srcPoint;	// where the passenger initially is
 	private String dstPoint;	// where the passenger wants to go
-	private int cost = 0;		// how much will the passenger pay
+	private double cost = 0;		// how much will the passenger pay
+	private double tolerance;
 	
 	// Class constructor
 	public Passenger(int weight, String srcPoint, String dstPoint)
@@ -23,10 +24,29 @@ public class Passenger extends Agent
 		this.weight = weight;
 		this.srcPoint = srcPoint;
 		this.dstPoint = dstPoint;
+		this.tolerance = 0;
 	}
 	
-	// Increments the cost by a given amount
-	public void increaseCost(int cost){ this.cost += cost; }
+	public Passenger(int weight, String srcPoint, String dstPoint, double tolerance)
+	{
+		this.weight = weight;
+		this.srcPoint = srcPoint;
+		this.dstPoint = dstPoint;
+		this.tolerance = tolerance;
+	}
+	
+	
+	public String getSrcPoint() {
+		return srcPoint;
+	}
+
+	public String getDstPoint() {
+		return dstPoint;
+	}
+
+	public double getTolerance() {
+		return tolerance;
+	}
 	
 	// Moves the passenger to a given location
 	public void move(Location dst, ContinuousSpace<Object> space) {
@@ -42,9 +62,9 @@ public class Passenger extends Agent
 		central.setName(Utilities.CENTRAL_AID);
 	
 			if (weight > 1)
-				System.out.println("[PASSENGER] : " + weight + " people are waiting on " + srcPoint + " to go to " + dstPoint);
+				System.out.println("[PASSENGER] : people are waiting on " + srcPoint + " to go to " + dstPoint + " with delta " + tolerance);
 			else
-				System.out.println("[PASSENGER] : I am waiting on " + srcPoint + " to go to " + dstPoint);
+				System.out.println("[PASSENGER] : I am waiting on " + srcPoint + " to go to " + dstPoint + " with delta " + tolerance);
 			
 			
 			// Send a 'request for taxi'
@@ -52,7 +72,7 @@ public class Passenger extends Agent
 				public void action() {
 					
 					// Send a request to the central
-					Utilities.sendMessage(ACLMessage.REQUEST, central, "ask_taxi;" +  srcPoint + ";" + dstPoint + ";" + weight, myAgent);
+					Utilities.sendMessage(ACLMessage.REQUEST, central, "ask_taxi;" +  srcPoint + ";" + dstPoint + ";" + weight + ";" + tolerance, myAgent);
 	
 				}		
 			});

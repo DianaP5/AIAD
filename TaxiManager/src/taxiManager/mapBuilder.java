@@ -167,8 +167,8 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		connectPlaces("Coimbra", "Setubal", 18.0);
 		connectPlaces("Setubal", "Beja", 8.0);		
 		connectPlaces("Porto", "Coimbra", 2.0);
-
-		*/
+*/
+		
 		// TEST MAP
 		addLocation("a", 10.0, 30.0);
 		addLocation("b", 10.0, 10.0);

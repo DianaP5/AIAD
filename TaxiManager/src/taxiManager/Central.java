@@ -51,14 +51,14 @@ public class Central extends Agent
 	}
 	
 	// Creates passengers in random places
-	@ScheduledMethod(start = 10, interval=10)
+	@ScheduledMethod(start = 10, interval = 5)
 	public void addPassenger()
 	{
 		Random r = new Random();
 		String src, dst; 
 		src = locations.get(r.nextInt(locations.size())).getLocationName();
 		do { dst = locations.get(r.nextInt(locations.size())).getLocationName(); } while(src.equals(dst));
-		Passenger pass = new Passenger(2,src,dst);
+		Passenger pass = new Passenger(2,src,dst, 1.8);
 		try {
 			this.getContainerController().acceptNewAgent("Passenger" + passNum++, pass).start();
 			pass.move(getLocation(src), space);
@@ -116,7 +116,7 @@ public class Central extends Agent
 						// Process request content and send job proposal to every company taxi
 						data = Utilities.processServiceRequest(content);
 						for (int i = 0; i < companyTaxis.size(); i++) {
-							Utilities.sendMessage(ACLMessage.PROPOSE, companyTaxis.get(i).getAID(), "taxi_proposal;" + data.get(0) + ";" + data.get(1) + ";" + data.get(2), myAgent);
+							Utilities.sendMessage(ACLMessage.PROPOSE, companyTaxis.get(i).getAID(), "taxi_proposal;" + data.get(0) + ";" + data.get(1) + ";" + data.get(2) + ";" + data.get(3), myAgent);
 							System.out.println("[CENTRAL] : SENT MESSAGE TO " + companyTaxis.get(i).getName());
 						}
 						
@@ -165,11 +165,64 @@ public class Central extends Agent
 						Utilities.sendMessage(ACLMessage.INFORM, choosenTaxi.getAID(), clientName, myAgent);
 						answers = 0; // restart variable for future requests
 					}
+					else if(Utilities.strategy == Utilities.SHORTEST_TIME)
+					{
+						Taxi choosenTaxi = bestChoiceBetweenEmpty(data.get(0));
+						if(choosenTaxi == null)
+							choosenTaxi = bestChoiceBetweenPartial(data.get(0));
+						
+						Utilities.sendMessage(ACLMessage.INFORM, choosenTaxi.getAID(), clientName, myAgent);
+						answers = 0; // restart variable for future requests
+					}
 				}
 			}
 		});
 	}
 
+	public Taxi bestChoiceBetweenEmpty(String src){
+		Taxi t = null;
+		ShortestPath<Object> shortestPath = new ShortestPath<Object>(network);
+		double min = Double.POSITIVE_INFINITY;
+		for(int i = 0; i < companyTaxis.size(); i++){
+			if(companyTaxis.get(i).isEmpty()){
+				double distance = shortestPath.getPathLength(
+						getLocation(companyTaxis.get(i).getCurrentLocation()),
+						getLocation(src));
+				if(distance <= min){
+					min = distance;
+					t = companyTaxis.get(i);
+				}
+			}
+		}
+		return t;
+	}
+	
+	public Taxi bestChoiceBetweenPartial(String src){
+		Taxi t = null;
+		ShortestPath<Object> shortestPath = new ShortestPath<Object>(network);
+		double max = 0;
+		for(int i = 0; i < companyTaxis.size(); i++){
+			Passenger lessTolerant = companyTaxis.get(i).lessTolerantPassenger();
+			double detour = shortestPath.getPathLength(
+					getLocation(companyTaxis.get(i).getCurrentLocation()),
+					getLocation(src)) -  
+					shortestPath.getPathLength(
+					getLocation(src), 
+					getLocation(lessTolerant.getDstPoint()));
+			double direct = shortestPath.getPathLength(
+					getLocation(companyTaxis.get(i).getCurrentLocation()),
+					getLocation(lessTolerant.getDstPoint()));
+			if(Math.abs(detour - direct) <= lessTolerant.getTolerance()){
+				double difference = (detour - direct) - lessTolerant.getTolerance();
+				if( difference >= max ){
+					max = difference;
+					t = companyTaxis.get(i); 
+				}
+			}
+		}
+		return t;
+	}
+	
 	public void txtToAgent(String agentsFile) throws IOException
 	{
 		//Passenger
