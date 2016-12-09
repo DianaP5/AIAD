@@ -5,6 +5,7 @@ import sajas.core.behaviours.CyclicBehaviour;
 import sajas.core.behaviours.OneShotBehaviour;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import repast.simphony.context.Context;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.util.ContextUtils;
@@ -17,6 +18,10 @@ public class Passenger extends Agent
 	private String dstPoint;	// where the passenger wants to go
 	private double cost = 0;		// how much will the passenger pay
 	private double tolerance;
+	
+	private MessageTemplate confirm = MessageTemplate.MatchPerformative(ACLMessage.CONFIRM);
+	private MessageTemplate inform = MessageTemplate.MatchPerformative(ACLMessage.INFORM);
+	private MessageTemplate subscribe = MessageTemplate.MatchPerformative(ACLMessage.SUBSCRIBE);
 	
 	// Class constructor
 	public Passenger(int weight, String srcPoint, String dstPoint)
@@ -79,30 +84,44 @@ public class Passenger extends Agent
 			
 			// Process taxi messages
 			addBehaviour(new CyclicBehaviour(){
-				boolean received = false;
 				public void action() {
 					// Receive confirmation from taxi
-					ACLMessage message = myAgent.receive();	
+					ACLMessage message = myAgent.receive(inform);	
 					if (message != null) {
-						if(message.getPerformative() == ACLMessage.INFORM && !received){
 							System.out.println("[PASSENGER " + myAgent.getLocalName() + "] Received : " + message.getContent());
 							Context<Object> context = ContextUtils.getContext(myAgent);
 							context.remove(myAgent);
-							received = true;
-						} else if(message.getPerformative() == ACLMessage.CONFIRM ){
-							cost += Double.parseDouble(message.getContent());
-							System.out.println("I paied a total of " + cost);
-							myAgent.doDelete();
-							received = false;
-						} else if(message.getPerformative() == ACLMessage.SUBSCRIBE){
-							cost += Double.parseDouble(message.getContent());
-						}
+					} else {
+						block();
 					}
 				}
 			});
 			
+			addBehaviour(new CyclicBehaviour(){
+				public void action() {
+					ACLMessage message = myAgent.receive(confirm);
+					if(message != null) {
+						cost += Double.parseDouble(message.getContent());
+						System.out.println("I paied a total of " + cost);
+						myAgent.doDelete();
+					} else {
+						block();
+					}
+				}
+			});
+			
+			addBehaviour(new CyclicBehaviour(){
+				public void action() {
+					ACLMessage message = myAgent.receive(subscribe);
+					if(message != null) {
+						cost += Double.parseDouble(message.getContent());
+					} else {
+						block();
+					}
+				}
+			});
 	}
 	
 	// take down passenger
-	protected void takeDown() {}
+	protected void takeDown() {System.out.println(getName() + " reached his destination");}
 }

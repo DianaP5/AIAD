@@ -14,22 +14,109 @@ import repast.simphony.space.graph.ShortestPath;
 import sajas.core.Agent;
 import sajas.core.Runtime;
 import sajas.core.behaviours.CyclicBehaviour;
+import sajas.core.behaviours.TickerBehaviour;
+
+class MoveAgentBehaviour extends TickerBehaviour {
+	private ArrayList<String> data;
+	private AID passengerAID;
+	ShortestPath<Object> shortestPath;
+	private double weightAux = 0;
+	private boolean aux = true;
+
+	public MoveAgentBehaviour(Agent a, long step, ArrayList<String> data) {
+		super(a, step);
+		this.data = data;
+		this.passengerAID = new AID();
+		this.passengerAID.setName(data.get(4));
+		this.shortestPath = new ShortestPath<Object>(((Taxi) a).network);
+	}
+
+	@Override
+	protected void onTick() {
+		if (((Taxi) myAgent).currentLocation.equals(data.get(0))) {
+			System.out.println("MANDEI MENSAGEM DE OLÁ");
+			Utilities.sendMessage(ACLMessage.INFORM, passengerAID, "Hello", myAgent);
+			((Taxi) myAgent).move((Location) ((Taxi) myAgent).getPath().get(0).getTarget());
+			weightAux = ((Taxi) myAgent).getPath().get(0).getWeight();
+			((Taxi) myAgent).getPath().remove(0);
+		} else {
+			if (((Taxi) myAgent).currentLocation.equals(((Taxi) myAgent).lessTolerantPassenger().getDstPoint())) {
+				System.out.println("MANDEI MENSAGEM DE ADEUS");
+				Utilities.sendMessage(ACLMessage.CONFIRM, ((Taxi) myAgent).lessTolerantPassenger().getAID(),
+						Double.toString(weightAux / ((Taxi) myAgent).getPassengersList().size()), myAgent);
+				((Taxi) myAgent).getPassengersList().remove(((Taxi) myAgent).lessTolerantPassenger());
+				passengerAID.setName(((Taxi) myAgent).lessTolerantPassenger().getName());
+				if (((Taxi) myAgent).getPassengersList().size() != 0) {
+					((Taxi) myAgent).getPath().addAll(shortestPath.getPath(
+							((Taxi) myAgent).getLocation(((Taxi) myAgent).currentLocation),
+							((Taxi) myAgent).getLocation(((Taxi) myAgent).lessTolerantPassenger().getDstPoint())));
+				} else {
+					stop();
+				}
+			} else {
+				for (int j = 0; j < ((Taxi) myAgent).getPassengersList().size(); j++) {
+					Utilities.sendMessage(ACLMessage.SUBSCRIBE, ((Taxi) myAgent).getPassengersList().get(j).getAID(),
+							Double.toString(weightAux / ((Taxi) myAgent).getPassengersList().size()), myAgent);
+				}
+				((Taxi) myAgent).move((Location) ((Taxi) myAgent).getPath().get(0).getTarget());
+				weightAux = ((Taxi) myAgent).getPath().get(0).getWeight();
+				((Taxi) myAgent).getPath().remove(0);
+			}
+		}
+	}
+	
+	/*
+	 * @Override protected void onTick() { if (!((Taxi)
+	 * myAgent).getPath().isEmpty()) { if (((Taxi)
+	 * myAgent).currentLocation.equals(data.get(0))) {
+	 * System.out.println("MANDEI MENSAGEM DE OLÁ");
+	 * Utilities.sendMessage(ACLMessage.INFORM, passengerAID, "Hello", myAgent);
+	 * } else { for (int j = 0; j < ((Taxi) myAgent).getPassengersList().size();
+	 * j++) { Utilities.sendMessage(ACLMessage.SUBSCRIBE, ((Taxi)
+	 * myAgent).getPassengersList().get(j).getAID(), Double.toString(((Taxi)
+	 * myAgent).getPath().get(0).getWeight() / ((Taxi)
+	 * myAgent).getPassengersList().size()), myAgent); } } ((Taxi)
+	 * myAgent).move((Location) ((Taxi) myAgent).getPath().get(0).getTarget());
+	 * 
+	 * if (!((Taxi) myAgent).getPath().isEmpty()) ((Taxi)
+	 * myAgent).getPath().remove(0);
+	 * 
+	 * } else if (((Taxi) myAgent).currentLocation.equals(((Taxi)
+	 * myAgent).lessTolerantPassenger().getDstPoint())) {
+	 * Utilities.sendMessage(ACLMessage.CONFIRM, ((Taxi)
+	 * myAgent).lessTolerantPassenger().getAID(), Double.toString(((Taxi)
+	 * myAgent).getPath().get(0).getWeight() / ((Taxi)
+	 * myAgent).getPassengersList().size()), myAgent);
+	 * System.out.println("MANDEI MENSAGEM DE ADEUS"); ((Taxi)
+	 * myAgent).getPath().clear(); ((Taxi)
+	 * myAgent).getPassengersList().remove(((Taxi)
+	 * myAgent).lessTolerantPassenger());
+	 * 
+	 * if (!((Taxi) myAgent).getPassengersList().isEmpty()) ((Taxi)
+	 * myAgent).getPath() .addAll(shortestPath.getPath(((Taxi)
+	 * myAgent).getLocation(((Taxi) myAgent).currentLocation), ((Taxi)
+	 * myAgent).getLocation(((Taxi)
+	 * myAgent).lessTolerantPassenger().getDstPoint()))); } }
+	 */
+}
 
 public class Taxi extends Agent {
 
 	// WORLD FIELDS
 	private ContinuousSpace<Object> space;
-	private Network<Object> network;
+	public Network<Object> network;
 
 	// TAXI FIELDS
 	private String initialLocation; // initial location
-	private String currentLocation; // current location
+	public String currentLocation; // current location
 	private int passengers = 0; // current number of passenger inside the taxi
 	private ArrayList<Location> locations;
-	private List<RepastEdge<Object>> path = new ArrayList<RepastEdge<Object>>(); // the
-																					// path
-																					// to
-																					// follow
+	private List<RepastEdge<Object>> path = new ArrayList<RepastEdge<Object>>();
+
+	public List<RepastEdge<Object>> getPath() {
+		return path;
+	}
+
 	private ArrayList<Passenger> passengersList = new ArrayList<Passenger>();
 
 	// Class constructor
@@ -52,6 +139,10 @@ public class Taxi extends Agent {
 			}
 		}
 		return p;
+	}
+
+	public ArrayList<Passenger> getPassengersList() {
+		return passengersList;
 	}
 
 	// Prints the path to follow
@@ -86,7 +177,7 @@ public class Taxi extends Agent {
 	}
 
 	// Returns a location given its name
-	private Location getLocation(String locationName) {
+	public Location getLocation(String locationName) {
 
 		for (int i = 0; i < locations.size(); i++) {
 			if (locations.get(i).getLocationName().equals(locationName))
@@ -159,7 +250,7 @@ public class Taxi extends Agent {
 
 							// Move taxi accordingly
 							for (int i = 0; i < path.size(); i++) {
-								move((Location) path.get(i).getTarget());
+								// TODO : ADD MOVE HERE
 								// When passenger source location is reached...
 								AID passengerAID = new AID();
 								passengerAID.setName(message.getContent());
@@ -173,46 +264,34 @@ public class Taxi extends Agent {
 											Double.toString(path.get(i).getWeight()), myAgent);
 								}
 							}
-						} else if(Utilities.strategy == Utilities.SHORTEST_TIME){
+						} else if (Utilities.strategy == Utilities.SHORTEST_TIME) {
 
 							AID passengerAID = new AID();
 							passengerAID.setName(message.getContent());
 							ShortestPath<Object> shortestPath = new ShortestPath<Object>(network);
-								
-							if(!isEmpty()) {
-								passengersList.add(new Passenger(Integer.parseInt(data.get(2)), data.get(0), data.get(1), Double.parseDouble(data.get(3))));
+							data.add(message.getContent());
+							if (isEmpty()) {
+								passengersList.add(new Passenger(Integer.parseInt(data.get(2)), data.get(0),
+										data.get(1), Double.parseDouble(data.get(3))));
 								System.out.println(myAgent.getLocalName() + " : I WAS EMPTY AND ADDED A PASSENGER");
-								path.addAll(shortestPath.getPath(getLocation(currentLocation), getLocation(data.get(0))));
+								path.addAll(
+										shortestPath.getPath(getLocation(currentLocation), getLocation(data.get(0))));
 								path.addAll(shortestPath.getPath(getLocation(data.get(0)), getLocation(data.get(1))));
 							} else {
-								passengersList.add(new Passenger(Integer.parseInt(data.get(2)), data.get(0), data.get(1), Double.parseDouble(data.get(3))));
-								System.out.println(myAgent.getLocalName() + " : I WAS PARCIAL AND ADDED A PASSENGER AND HAVE " + passengersList.size() + " PASSENGERS");
+								passengersList.add(new Passenger(Integer.parseInt(data.get(2)), data.get(0),
+										data.get(1), Double.parseDouble(data.get(3))));
+								System.out.println(
+										myAgent.getLocalName() + " : I WAS PARCIAL AND ADDED A PASSENGER AND HAVE "
+												+ passengersList.size() + " PASSENGERS");
 								path.clear();
-								path.addAll(shortestPath.getPath(getLocation(currentLocation), getLocation(data.get(0))));
-								path.addAll(shortestPath.getPath(getLocation(data.get(0)), getLocation(lessTolerantPassenger().getDstPoint())));
+								path.addAll(
+										shortestPath.getPath(getLocation(currentLocation), getLocation(data.get(0))));
+								path.addAll(shortestPath.getPath(getLocation(data.get(0)),
+										getLocation(lessTolerantPassenger().getDstPoint())));
 							}
-							
-							// Move taxi accordingly
-							for (int i = 0; i < path.size(); i++) {
-								dumpPath();
-								move((Location) path.get(i).getTarget());
-								if (currentLocation.equals(data.get(0))) {
-									Utilities.sendMessage(ACLMessage.INFORM, passengerAID, "Hello", myAgent);
-								} else if (currentLocation.equals(lessTolerantPassenger().getDstPoint())) {
-									Utilities.sendMessage(ACLMessage.CONFIRM, lessTolerantPassenger().getAID(), Double.toString(path.get(i).getWeight()/passengersList.size()), myAgent);
-									path.clear();
-									passengersList.remove(lessTolerantPassenger());
-									if(!isEmpty())
-										path.addAll(shortestPath.getPath(getLocation(currentLocation), getLocation(lessTolerantPassenger().getDstPoint())));
-								} else {
-									for(int j = 0; j < passengersList.size(); j++){
-										Utilities.sendMessage(ACLMessage.SUBSCRIBE, passengersList.get(j).getAID(),
-											Double.toString(path.get(j).getWeight()/passengersList.size()), myAgent);
-									}
-								}
-							}
-							
-							
+
+							myAgent.addBehaviour(new MoveAgentBehaviour(myAgent, 5, data));
+
 						}
 					}
 				}

@@ -51,17 +51,18 @@ public class Central extends Agent
 	}
 	
 	// Creates passengers in random places
-	@ScheduledMethod(start = 10, interval = 5)
+	@ScheduledMethod(start = 5, interval = 50)
 	public void addPassenger()
 	{
 		Random r = new Random();
 		String src, dst; 
 		src = locations.get(r.nextInt(locations.size())).getLocationName();
 		do { dst = locations.get(r.nextInt(locations.size())).getLocationName(); } while(src.equals(dst));
-		Passenger pass = new Passenger(2,src,dst, 1.8);
+		Passenger pass = new Passenger(2,src,dst, r.nextDouble() * 10);
 		try {
 			this.getContainerController().acceptNewAgent("Passenger" + passNum++, pass).start();
 			pass.move(getLocation(src), space);
+			System.out.println("Passenger" + passNum + " created");
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
 		}
@@ -111,13 +112,11 @@ public class Central extends Agent
 					 if (content.contains("ask_taxi")) { // Process request for taxi
 
 						clientName = message.getSender().getName();
-						System.out.println("[CENTRAL] : RECEIVED 'ASK TAXI MSG'");
 
 						// Process request content and send job proposal to every company taxi
 						data = Utilities.processServiceRequest(content);
 						for (int i = 0; i < companyTaxis.size(); i++) {
 							Utilities.sendMessage(ACLMessage.PROPOSE, companyTaxis.get(i).getAID(), "taxi_proposal;" + data.get(0) + ";" + data.get(1) + ";" + data.get(2) + ";" + data.get(3), myAgent);
-							System.out.println("[CENTRAL] : SENT MESSAGE TO " + companyTaxis.get(i).getName());
 						}
 						
 					 } else if (message.getPerformative() == ACLMessage.ACCEPT_PROPOSAL && answers < companyTaxis.size()) {
@@ -170,9 +169,16 @@ public class Central extends Agent
 						Taxi choosenTaxi = bestChoiceBetweenEmpty(data.get(0));
 						if(choosenTaxi == null)
 							choosenTaxi = bestChoiceBetweenPartial(data.get(0));
-						
-						Utilities.sendMessage(ACLMessage.INFORM, choosenTaxi.getAID(), clientName, myAgent);
-						answers = 0; // restart variable for future requests
+						if(choosenTaxi != null){
+							Utilities.sendMessage(ACLMessage.INFORM, choosenTaxi.getAID(), clientName, myAgent);
+							answers = 0; // restart variable for future requests
+						} else {
+							System.out.println("Taxi not choosen");
+							Random t = new Random();
+							choosenTaxi = companyTaxis.get(t.nextInt(companyTaxis.size()));
+							Utilities.sendMessage(ACLMessage.INFORM, choosenTaxi.getAID(), clientName, myAgent);
+							answers = 0; // restart variable for future requests
+						}
 					}
 				}
 			}
@@ -205,7 +211,7 @@ public class Central extends Agent
 			Passenger lessTolerant = companyTaxis.get(i).lessTolerantPassenger();
 			double detour = shortestPath.getPathLength(
 					getLocation(companyTaxis.get(i).getCurrentLocation()),
-					getLocation(src)) -  
+					getLocation(src)) +  
 					shortestPath.getPathLength(
 					getLocation(src), 
 					getLocation(lessTolerant.getDstPoint()));
@@ -225,8 +231,6 @@ public class Central extends Agent
 	
 	public void txtToAgent(String agentsFile) throws IOException
 	{
-		//Passenger
-		//weight;src;dst
 		FileReader agentFile = new FileReader(agentsFile);
 		BufferedReader agentReader = new BufferedReader(agentFile);
 		String loc_line;

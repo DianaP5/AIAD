@@ -34,7 +34,7 @@ public class Utilities {
 	public final static double MAXIMUM_DISTANCE = Double.POSITIVE_INFINITY;
 	
 	// SIMULATION VARIABLES
-	public static int NUMBER_TAXIS = 2;
+	public static int NUMBER_TAXIS = 1;
 	public static int TAXI_CAPACITY = 4;
 	public final static String CENTRAL_AID = "Central@Taxi Manager";	// central fixed AID
 	public final static int FIRST_SERVED = 1;
