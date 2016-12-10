@@ -83,7 +83,7 @@ public class Passenger extends Agent
 			});
 			
 			// Process taxi messages
-			addBehaviour(new CyclicBehaviour(){
+			/*addBehaviour(new CyclicBehaviour(){
 				public void action() {
 					// Receive confirmation from taxi
 					ACLMessage message = myAgent.receive(inform);	
@@ -95,27 +95,35 @@ public class Passenger extends Agent
 						block();
 					}
 				}
-			});
+			});*/
 			
 			addBehaviour(new CyclicBehaviour(){
 				public void action() {
-					ACLMessage message = myAgent.receive(confirm);
+					ACLMessage message = myAgent.receive();
 					if(message != null) {
-						cost += Double.parseDouble(message.getContent());
-						System.out.println("I paied a total of " + cost);
-						myAgent.doDelete();
-					} else {
-						block();
+						
+						if(message.getPerformative() == ACLMessage.CONFIRM)
+						{
+							cost += Double.parseDouble(message.getContent());
+							System.out.println(myAgent.getAID()+" paied a total of " + cost);
+							myAgent.doDelete();
+						}
+						
+						if(message.getPerformative() == ACLMessage.SUBSCRIBE)
+						{
+							cost += Double.parseDouble(message.getContent());
+						}
+						
+						if(message.getPerformative() == ACLMessage.INFORM)
+						{
+							System.out.println("[PASSENGER " + myAgent.getLocalName() + "] Received : " + message.getContent());
+							Context<Object> context = ContextUtils.getContext(myAgent);
+							//System.out.println("erro: "+myAgent);
+							context.remove(myAgent);
+						}
 					}
-				}
-			});
-			
-			addBehaviour(new CyclicBehaviour(){
-				public void action() {
-					ACLMessage message = myAgent.receive(subscribe);
-					if(message != null) {
-						cost += Double.parseDouble(message.getContent());
-					} else {
+					else 
+					{
 						block();
 					}
 				}

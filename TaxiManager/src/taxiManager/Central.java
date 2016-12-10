@@ -16,7 +16,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public class Central extends Agent
@@ -51,7 +50,7 @@ public class Central extends Agent
 	}
 	
 	// Creates passengers in random places
-	@ScheduledMethod(start = 5, interval = 50)
+	@ScheduledMethod(start = 5, interval = 10)
 	public void addPassenger()
 	{
 		Random r = new Random();
