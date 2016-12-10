@@ -106,6 +106,7 @@ public class Passenger extends Agent
 						{
 							cost += Double.parseDouble(message.getContent());
 							System.out.println(myAgent.getAID()+" paied a total of " + cost);
+							Utilities.sendMessage(ACLMessage.AGREE,central, String.valueOf(cost), myAgent);
 							myAgent.doDelete();
 						}
 						
