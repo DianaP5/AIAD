@@ -62,7 +62,7 @@ public class Central extends Agent {
 		do {
 			dst = locations.get(r.nextInt(locations.size())).getLocationName();
 		} while (src.equals(dst));
-		Passenger pass = new Passenger(2, src, dst, r.nextDouble() * 10);
+		Passenger pass = new Passenger(r.nextInt()* Utilities.TAXI_CAPACITY, src, dst, r.nextDouble() * 10);
 		try {
 			this.getContainerController().acceptNewAgent("Passenger" + passNum++, pass).start();
 			pass.move(getLocation(src), space);
