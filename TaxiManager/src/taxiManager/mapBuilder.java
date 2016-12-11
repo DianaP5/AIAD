@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
+import agents.Central;
+import agents.Taxi;
 import jade.core.AID;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
@@ -124,7 +126,7 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		NetworkBuilder<Object> netBuilder = new NetworkBuilder<Object>("network", this.context, true);
 		netBuilder.buildNetwork();
 		network = (Network<Object>) this.context.getProjection("network");
-			/*
+		/*	
 		// GENERATE LOCATIONS
 		addLocation("Viana Do Castelo", 5.0, 47.0);
 		addLocation("Braga", 10.0, 43.0);
@@ -166,9 +168,9 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		connectPlaces("Portalegre", "Coimbra", 10.0);
 		connectPlaces("Coimbra", "Setubal", 18.0);
 		connectPlaces("Setubal", "Beja", 8.0);		
-		connectPlaces("Porto", "Coimbra", 2.0);
-*/
-		
+		connectPlaces("Porto", "Coimbra", 2.0);*/
+
+		/*
 		// TEST MAP
 		addLocation("a", 10.0, 30.0);
 		addLocation("b", 10.0, 10.0);
@@ -184,7 +186,35 @@ public class mapBuilder extends RepastSLauncher implements ContextBuilder<Object
 		connectPlaces("e","d",3.0);
 		connectPlaces("e","c",2.0);
 		connectPlaces("e","f",2.0);
+		connectPlaces("f","c",3.0);*/
+		
+		addLocation("a", 10.0, 30.0);
+		addLocation("b", 10.0, 10.0);
+		addLocation("c", 30.0, 30.0);
+		addLocation("d", 30.0, 10.0);
+		addLocation("e", 45.0, 15.0);
+		addLocation("f", 45.0, 45.0);
+		addLocation("g", 35.0, 45.0);
+		addLocation("h", 25.0, 45.0);
+		addLocation("i", 15.0, 40.0);
+		addLocation("j", 5.0, 45.0);
+		connectPlaces("a","b",4.0);
+		connectPlaces("a","c",3.0);
+		connectPlaces("a","d",5.0);
+		connectPlaces("b","d",2.0);
+		connectPlaces("d","c",3.0);
+		connectPlaces("e","d",3.0);
+		connectPlaces("e","c",2.0);
+		connectPlaces("e","f",2.0);
 		connectPlaces("f","c",3.0);
+		connectPlaces("f","g",1.0);
+		connectPlaces("g","c",2.0);
+		connectPlaces("h","g",4.0);
+		connectPlaces("h","i",1.0);
+		connectPlaces("i","j",2.0);
+		connectPlaces("j","a",3.0);
+		connectPlaces("i","a",3.0);
+		connectPlaces("i","c",6.0);
 		
 		
 		// Clean everything before the simulation ends
